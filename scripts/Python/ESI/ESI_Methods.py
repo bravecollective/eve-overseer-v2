@@ -41,4 +41,36 @@ class Methods(ESI_Base.Base):
             payload = arguments["ids"], 
             cacheTime = 3600, 
             retries = (arguments["retries"] if "retries" in arguments else 0)
-        )        
+        )
+
+    def universe_categories_list(self, arguments):
+    
+        return self.makeRequest(
+            endpoint = "/universe/categories/", 
+            url = (self.esiURL + "latest/universe/categories/?datasource=tranquility"), 
+            retries = (arguments["retries"] if "retries" in arguments else 0)
+        )
+
+    def universe_categories(self, arguments):
+    
+        return self.makeRequest(
+            endpoint = "/universe/categories/{category_id}/", 
+            url = (self.esiURL + "latest/universe/categories/" + str(arguments["category_id"]) + "/?datasource=tranquility"), 
+            retries = (arguments["retries"] if "retries" in arguments else 0)
+        )
+
+    def universe_groups_list(self, arguments):
+    
+        return self.makeRequest(
+            endpoint = "/universe/groups/", 
+            url = (self.esiURL + "latest/universe/groups/?datasource=tranquility&page=" + str(arguments["page"])), 
+            retries = (arguments["retries"] if "retries" in arguments else 0)
+        )
+
+    def universe_groups(self, arguments):
+    
+        return self.makeRequest(
+            endpoint = "/universe/groups/{group_id}/", 
+            url = (self.esiURL + "latest/universe/groups/" + str(arguments["group_id"]) + "/?datasource=tranquility"), 
+            retries = (arguments["retries"] if "retries" in arguments else 0)
+        )

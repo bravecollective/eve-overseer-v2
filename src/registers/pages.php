@@ -41,10 +41,63 @@
     );
     
     
+    $this->registerPage(
+        linkToUse: "personal_stats",
+        nameToUse: "Personal Stats",
+        codeToUse: "PersonalStats",
+        useModel: true,
+        useController: true,
+        useAPI: true,
+        loginRequired: true, 
+        accessRoles: ["Blue"]
+    );
+
+    $this->registerPage(
+        linkToUse: "fleet_stats",
+        nameToUse: "Fleet Stats",
+        codeToUse: "FleetStats",
+        useModel: true,
+        useController: true,
+        useAPI: true,
+        loginRequired: true, 
+        accessRoles: ["View Stats", "View All Stats"]
+    );
+
+    $this->registerPage(
+        linkToUse: "tracking",
+        nameToUse: "Tracking",
+        codeToUse: "Tracking",
+        useModel: true,
+        useController: true,
+        useAPI: true,
+        loginRequired: true, 
+        accessRoles: ["FC", "Full FC"]
+    );
+
+    $this->registerPage(
+        linkToUse: "player_participation",
+        nameToUse: "Player Participation",
+        codeToUse: "PlayerPAP",
+        useModel: true,
+        useController: true,
+        useAPI: true,
+        loginRequired: true, 
+        accessRoles: ["CEO", "View All PAP Data"]
+    );
+
+    $this->registerPage(
+        linkToUse: "alliance_participation",
+        nameToUse: "Alliance Participation",
+        codeToUse: "AlliancePAP",
+        useModel: true,
+        useController: true,
+        useAPI: true,
+        loginRequired: true, 
+        accessRoles: ["CEO", "View All PAP Data"]
+    );
     
     
-    
-    //ADMINISTRATON PAGE
+    //ADMINISTRATION PAGE
     $this->registerPage(
         linkToUse: "admin",
         nameToUse: "Admin",

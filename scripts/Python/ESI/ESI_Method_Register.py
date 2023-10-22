@@ -29,6 +29,30 @@ class MethodRegister(ESI_Methods.Methods):
             method = "universe_names",
             requiredArguments = ["ids"]
         )
+
+        self.register(
+            endpoint = "/universe/categories/", 
+            method = "universe_categories_list",
+            requiredArguments = []
+        )
+
+        self.register(
+            endpoint = "/universe/categories/{category_id}/", 
+            method = "universe_categories",
+            requiredArguments = ["category_id"]
+        )
+
+        self.register(
+            endpoint = "/universe/groups/", 
+            method = "universe_groups_list",
+            requiredArguments = ["page"]
+        )
+
+        self.register(
+            endpoint = "/universe/groups/{group_id}/", 
+            method = "universe_groups",
+            requiredArguments = ["group_id"]
+        )
     
     def register(self, endpoint, method, requiredArguments):
     

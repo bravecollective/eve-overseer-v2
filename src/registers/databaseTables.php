@@ -26,4 +26,134 @@
             
     */
 
+    $siteDatabase->register(
+        "fleettypes",
+        ["Name" => "id", "Type" => "BIGINT", "Special" => "primary key AUTO_INCREMENT"],
+        ["Name" => "name", "Type" => "TEXT"]
+    );
+
+    $siteDatabase->register(
+        "fleettypeaccess",
+        ["Name" => "typeid", "Type" => "BIGINT"],
+        ["Name" => "roletype", "Type" => "TEXT"],
+        ["Name" => "roleid", "Type" => "BIGINT"],
+        ["Name" => "accesstype", "Type" => "TEXT"]
+    );
+
+    $siteDatabase->register(
+        "coreaccounts",
+        ["Name" => "coreid", "Type" => "BIGINT", "Special" => "primary key"],
+        ["Name" => "corename", "Type" => "TEXT"]
+    );
+
+    $siteDatabase->register(
+        "corelinks",
+        ["Name" => "characterid", "Type" => "BIGINT", "Special" => "primary key"],
+        ["Name" => "coreid", "Type" => "BIGINT"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (coreid)"]
+    );
+
+    $siteDatabase->register(
+        "fleets",
+        ["Name" => "id", "Type" => "BIGINT", "Special" => "primary key"],
+        ["Name" => "name", "Type" => "TEXT"],
+        ["Name" => "type", "Type" => "BIGINT"],
+        ["Name" => "commanderid", "Type" => "BIGINT"],
+        ["Name" => "starttime", "Type" => "BIGINT"],
+        ["Name" => "endtime", "Type" => "BIGINT"],
+        ["Name" => "status", "Type" => "TEXT"],
+        ["Name" => "sharekey", "Type" => "TEXT"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (type)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (commanderid)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (sharekey)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (starttime)"]
+    );
+
+    $siteDatabase->register(
+        "sharesubscriptions",
+        ["Name" => "sharekey", "Type" => "TEXT"],
+        ["Name" => "characterid", "Type" => "BIGINT"],
+        ["Name" => "", "Type" => "", "Special" => "CONSTRAINT snapshot_pk PRIMARY KEY (sharekey, characterid)"]
+    );
+
+    $siteDatabase->register(
+        "fleetsnapshots",
+        ["Name" => "fleetid", "Type" => "BIGINT"],
+        ["Name" => "timestamp", "Type" => "BIGINT"],
+        ["Name" => "", "Type" => "", "Special" => "CONSTRAINT snapshot_pk PRIMARY KEY (fleetid, timestamp)"]
+    );
+
+    $siteDatabase->register(
+        "fleetmembers",
+        ["Name" => "fleetid", "Type" => "BIGINT"],
+        ["Name" => "characterid", "Type" => "BIGINT"],
+        ["Name" => "corporationid", "Type" => "BIGINT"],
+        ["Name" => "allianceid", "Type" => "BIGINT"],
+        ["Name" => "role", "Type" => "TEXT"],
+        ["Name" => "wingid", "Type" => "BIGINT"],
+        ["Name" => "squadid", "Type" => "BIGINT"],
+        ["Name" => "starttime", "Type" => "BIGINT"],
+        ["Name" => "endtime", "Type" => "BIGINT"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (fleetid)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (characterid)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (corporationid)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (allianceid)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (starttime, endtime)"]
+    );
+
+    $siteDatabase->register(
+        "fleetlocations",
+        ["Name" => "fleetid", "Type" => "BIGINT"],
+        ["Name" => "characterid", "Type" => "BIGINT"],
+        ["Name" => "systemid", "Type" => "BIGINT"],
+        ["Name" => "starttime", "Type" => "BIGINT"],
+        ["Name" => "endtime", "Type" => "BIGINT"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (fleetid)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (characterid)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (starttime, endtime)"]
+    );
+
+    $siteDatabase->register(
+        "fleetships",
+        ["Name" => "fleetid", "Type" => "BIGINT"],
+        ["Name" => "characterid", "Type" => "BIGINT"],
+        ["Name" => "shipid", "Type" => "BIGINT"],
+        ["Name" => "starttime", "Type" => "BIGINT"],
+        ["Name" => "endtime", "Type" => "BIGINT"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (fleetid)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (characterid)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (shipid)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (starttime, endtime)"]
+    );
+
+    $siteDatabase->register(
+        "evetypes",
+        ["Name" => "id", "Type" => "BIGINT"],
+        ["Name" => "groupid", "Type" => "BIGINT"],
+        ["Name" => "", "Type" => "", "Special" => "PRIMARY KEY (id)"]
+    );
+
+    $siteDatabase->register(
+        "evegroups",
+        ["Name" => "id", "Type" => "BIGINT"],
+        ["Name" => "name", "Type" => "TEXT"],
+        ["Name" => "categoryid", "Type" => "BIGINT"],
+        ["Name" => "", "Type" => "", "Special" => "PRIMARY KEY (id)"]
+    );
+
+    $siteDatabase->register(
+        "evecategories",
+        ["Name" => "id", "Type" => "BIGINT"],
+        ["Name" => "name", "Type" => "TEXT"],
+        ["Name" => "", "Type" => "", "Special" => "PRIMARY KEY (id)"]
+    );
+
+
+    $siteDatabase->register(
+        "evesystems",
+        ["Name" => "id", "Type" => "BIGINT"],
+        ["Name" => "regionid", "Type" => "BIGINT"],
+        ["Name" => "", "Type" => "", "Special" => "PRIMARY KEY (id)"]
+    );
+
 ?>

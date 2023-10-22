@@ -20,9 +20,13 @@
     
     */
 
-    $this->registerRole("Member");
-    $this->registerRole("Role 1");
-    $this->registerRole("Role 2");
+    $this->registerRole("Blue");
+    $this->registerRole("FC");
+    $this->registerRole("Full FC");
+    $this->registerRole("View Stats");
+    $this->registerRole("View All Stats");
+    $this->registerRole("CEO");
+    $this->registerRole("View All PAP Data");
     $this->registerRole("Admin");
 
 ?>
