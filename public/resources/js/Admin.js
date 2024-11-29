@@ -43,6 +43,36 @@ jQuery(document).ready(function () {
         );
         
     });
+
+    $("#new-fleet-type-button").click(function () {
+        
+        createFleetType(
+            $("#new-fleet-type").val()
+        );
+        
+    });
+
+    $(".delete-fleet-type-button").click(function () {
+        
+        deleteFleetType(
+            $(this).attr("data-fleet-type"), 
+            $(this).attr("id")
+        );
+        
+    });
+
+
+    $(document).on("click", ".fleet-acl-switch", function () {
+        
+        updateFleetTypeAccess(
+            $(this).attr("data-fleet-type"), 
+            $(this).attr("data-group-type"),
+            $(this).attr("data-group"),
+            $(this).attr("data-access-type"),
+            $(this).attr("id")
+        );
+        
+    });
     
 });
 
@@ -323,4 +353,87 @@ function updateGroup(type, id, role, switch_id) {
         }
     });
     
+}
+
+function createFleetType(fleet_type_name) {
+
+    $("#new-fleet-type-button").prop("disabled", true);
+
+    $.ajax({
+        url: "/admin/?core_action=api",
+        type: "POST",
+        data: {"Action": "Create_Fleet_Type", "Fleet_Type_Name": fleet_type_name},
+        mimeType: "application/json",
+        dataType: "json",
+        success: function(result) {
+            
+            window.location.reload();
+            return false;
+            
+        },
+        error: function(result) {
+            
+            
+            
+        }
+    });
+
+}
+
+function deleteFleetType(fleet_type_id, button_id) {
+
+    $("#" + button_id).prop("disabled", true);
+
+    $.ajax({
+        url: "/admin/?core_action=api",
+        type: "POST",
+        data: {"Action": "Delete_Fleet_Type", "Fleet_Type_ID": fleet_type_id},
+        mimeType: "application/json",
+        dataType: "json",
+        success: function(result) {
+            
+            window.location.reload();
+            return false;
+            
+        },
+        error: function(result) {
+            
+            
+            
+        }
+    });
+
+}
+
+function updateFleetTypeAccess(fleet_type_id, role_type, role_id, access_type, switch_id) {
+
+    $("#" + switch_id).prop("disabled", true);
+    
+    dataObject = {
+        "Action": "Update_Fleet_Type_Access", 
+        "Fleet_Type_ID": fleet_type_id, 
+        "Role_Type": role_type, 
+        "Role_ID": role_id, 
+        "Access_Type": access_type,
+        "Change": ($("#" + switch_id).is(":checked") ? "Add" : "Remove")
+    };
+
+    $.ajax({
+        url: "/admin/?core_action=api",
+        type: "POST",
+        data: dataObject,
+        mimeType: "application/json",
+        dataType: "json",
+        success: function(result) {
+            
+            $("#" + switch_id).prop("disabled", false);
+            
+        },
+        error: function(result) {
+            
+            
+            
+        }
+    });
+
 }

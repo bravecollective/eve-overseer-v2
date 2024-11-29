@@ -53,6 +53,24 @@ class MethodRegister(ESI_Methods.Methods):
             method = "universe_groups",
             requiredArguments = ["group_id"]
         )
+
+        self.register(
+            endpoint = "/characters/{character_id}/fleet/", 
+            method = "character_fleet",
+            requiredArguments = ["character_id"]
+        )
+
+        self.register(
+            endpoint = "/fleets/{fleet_id}/members/", 
+            method = "fleet_members",
+            requiredArguments = ["fleet_id"]
+        )
+
+        self.register(
+            endpoint = "/fleets/{fleet_id}/wings/", 
+            method = "fleet_wings",
+            requiredArguments = ["fleet_id"]
+        )
     
     def register(self, endpoint, method, requiredArguments):
     

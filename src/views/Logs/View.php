@@ -272,7 +272,7 @@
         protected function rowTemplate($rowID, $rowTimestamp, $rowType, $rowActor, $rowPage) {
             
             $specialClass = match ($rowType) {
-                "Warning", "Notice", "Core Warning", "Compile Warning", "User Warning", "User Notice", "Recoverable Error" => "table-warning",
+                "Warning", "Notice", "Core Warning", "Compile Warning", "User Warning", "User Notice", "Recoverable Error", "Missing Hardcoded Input", "Bad Hardcoded Input" => "table-warning",
                 "Fatal Error", "Parsing Error", "Core Error", "Compile Error", "User Error", "Deprecated Code Error", "User Deprecated Code Error" => "table-danger",
                 default => ""
             };
@@ -281,8 +281,8 @@
             <tr class="log-entry <?php echo $specialClass; ?>" data-row-id="<?php echo $rowID; ?>" data-bs-toggle="modal" data-bs-target="#log-modal">
                 <td><?php echo date("c", $rowTimestamp); ?></td>
                 <td><?php echo htmlspecialchars($rowType); ?></td>
-                <td><?php echo htmlspecialchars($rowActor); ?></td>
-                <td><?php echo htmlspecialchars($rowPage); ?></td>
+                <td><?php echo htmlspecialchars($rowActor ?? ""); ?></td>
+                <td><?php echo htmlspecialchars($rowPage ?? ""); ?></td>
             </tr>
             
             <?php

@@ -15,7 +15,7 @@ DefaultScopes = esi-search.search_structures.v1
 ClientRedirect =
 ;When Using Environment Variables: ENV_OVERSEER_EVE_CLIENT_REDIRECT - (REQUIRED)
 ;The callback is handled by the backend rather than a specific page. It can be any page, but MUST include the URL Parameter 'core_action=callback'.
-AuthType = Eve
+AuthType = Neucore
 ;When Using Environment Variables: ENV_OVERSEER_EVE_AUTH_TYPE - (DEFAULT "Neucore")
 ;Neucore: Uses Brave Neucore groups to control page access.
 ;Eve: Controls access by character, corporation, and alliance.

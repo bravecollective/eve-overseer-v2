@@ -74,3 +74,31 @@ class Methods(ESI_Base.Base):
             url = (self.esiURL + "latest/universe/groups/" + str(arguments["group_id"]) + "/?datasource=tranquility"), 
             retries = (arguments["retries"] if "retries" in arguments else 0)
         )
+    
+    def character_fleet(self, arguments):
+
+        return self.makeRequest(
+            endpoint = "/characters/{character_id}/fleet/", 
+            #Note we need to use v2 here to get the commander ID
+            url = (self.esiURL + "v2/characters/" + str(arguments["character_id"]) + "/fleet/?datasource=tranquility"), 
+            accessToken = self.accessToken, 
+            retries = (arguments["retries"] if "retries" in arguments else 0)
+        )
+
+    def fleet_members(self, arguments):
+
+        return self.makeRequest(
+            endpoint = "/fleets/{fleet_id}/members/", 
+            url = (self.esiURL + "latest/fleets/" + str(arguments["fleet_id"]) + "/members/?datasource=tranquility"), 
+            accessToken = self.accessToken, 
+            retries = (arguments["retries"] if "retries" in arguments else 0)
+        )
+
+    def fleet_wings(self, arguments):
+
+        return self.makeRequest(
+            endpoint = "/fleets/{fleet_id}/wings/", 
+            url = (self.esiURL + "latest/fleets/" + str(arguments["fleet_id"]) + "/wings/?datasource=tranquility"), 
+            accessToken = self.accessToken, 
+            retries = (arguments["retries"] if "retries" in arguments else 0)
+        )

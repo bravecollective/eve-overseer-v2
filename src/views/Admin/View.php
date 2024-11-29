@@ -17,6 +17,9 @@
                                 <a href="#" class="nav-link active" id="admin-permissions-tab" data-bs-toggle="tab" data-bs-target="#admin-permissions" type="button" role="tab" aria-controls="admin-permissions" aria-selected="true">Permissions</a>
                             </li>
                             <li class="nav-item" role="presentation">
+                                <a href="#" class="nav-link" id="admin-fleet-types-tab" data-bs-toggle="tab" data-bs-target="#admin-fleet-types" type="button" role="tab" aria-controls="admin-fleet-types" aria-selected="false">Fleet Types</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
                                 <a href="#" class="nav-link" id="admin-about-tab" data-bs-toggle="tab" data-bs-target="#admin-about" type="button" role="tab" aria-controls="admin-about" aria-selected="false">About</a>
                             </li>
                         </ul>
@@ -33,6 +36,9 @@
                                     <?php $this->groupsTemplate(); ?>
                                 </div>
                             </div>
+                        </div>
+                        <div class="tab-pane fade" id="admin-fleet-types" role="tabpanel" aria-labelledby="admin-fleet-types-tab">
+                            <?php $this->fleetTypesTemplate(); ?>
                         </div>
                         <div class="tab-pane fade" id="admin-about" role="tabpanel" aria-labelledby="admin-about-tab">
                             <?php $this->aboutTemplate(); ?>
@@ -116,6 +122,56 @@
                 <?php
             }
             
+        }
+
+        protected function fleetTypesTemplate() {
+
+            ?>
+            
+            <div class="row mt-3">
+                <div class="col-lg-3">
+                    <div class="d-flex align-items-start bg-dark p-3 rounded">
+                        <ul class="nav nav-pills flex-column w-100" id="fleet-types-nav" role="tablist" aria-orientation="vertical">
+                            <div class="h5 text-muted mb-0">Fleet Types</div>
+                            <hr class="text-light">
+
+                            <?php foreach ($this->model->getFleetTypes() as $eachFleetType) { ?>
+                                <li class="nav-item" role="presentation">
+                                    <a href="#" class="nav-link" id="fleet-types-tab-<?php echo htmlspecialchars($eachFleetType["ID"]); ?>" data-bs-toggle="tab" data-bs-target="#fleet-types-pane-<?php echo htmlspecialchars($eachFleetType["ID"]); ?>" type="button" role="tab" aria-controls="fleet-types-pane-<?php echo htmlspecialchars($eachFleetType["ID"]); ?>" aria-selected="false"><?php echo htmlspecialchars($eachFleetType["Name"]); ?></a>
+                                </li>
+                            <?php } ?>
+
+                        </ul>
+                    </div>
+                    <div class="input-group mt-3">
+                        <input id="new-fleet-type" type="text" class="form-control" placeholder="New Fleet Type" aria-label="New Fleet Type" aria-describedby="new-fleet-type-button">
+                        <button class="btn btn-outline-primary" type="button" id="new-fleet-type-button">Add</button>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <div class="tab-content" id="fleet-type-panes">
+
+                        <?php foreach ($this->model->getFleetTypes() as $eachFleetType) {
+
+                            $typeClass = "\\Ridley\\Objects\\Admin\\FleetTypes\\" . $this->configVariables["Auth Type"];
+                            $fleetType = new $typeClass($this->dependencies, $eachFleetType["ID"], $eachFleetType["Name"]);
+                            
+                            ?>
+                            <div class="tab-pane fade" id="fleet-types-pane-<?php echo htmlspecialchars($eachFleetType["ID"]); ?>" role="tabpanel" aria-labelledby="fleet-types-tab-<?php echo htmlspecialchars($eachFleetType["ID"]); ?>">
+                                <h3 class="text-light"><?php echo htmlspecialchars($eachFleetType["Name"]); ?> Roles</h3>     
+                                <?php $fleetType->renderAccessPanels(); ?>
+                            
+                                <div class="d-grid mt-4">
+                                    <button class="btn btn-danger delete-fleet-type-button" type="button" data-fleet-type="<?php echo htmlspecialchars($eachFleetType["ID"]); ?>" id="delete-fleet-type-<?php echo htmlspecialchars($eachFleetType["ID"]); ?>">Delete <?php echo htmlspecialchars($eachFleetType["Name"]); ?></button>
+                                </div>
+                            </div>
+                        <?php } ?>
+
+                    </div>
+                </div>
+            </div>
+            
+            <?php
         }
         
         protected function aboutTemplate() {
@@ -231,7 +287,7 @@
         protected $configVariables;
         
         public function __construct(
-            private \Ridley\Core\Dependencies\DependencyManager $dependencies
+            protected \Ridley\Core\Dependencies\DependencyManager $dependencies
         ) {
             
             $this->model = $this->dependencies->get("Model");

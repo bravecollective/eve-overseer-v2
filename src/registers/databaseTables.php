@@ -35,9 +35,10 @@
     $siteDatabase->register(
         "fleettypeaccess",
         ["Name" => "typeid", "Type" => "BIGINT"],
-        ["Name" => "roletype", "Type" => "TEXT"],
+        ["Name" => "roletype", "Type" => "VARCHAR(32)"],
         ["Name" => "roleid", "Type" => "BIGINT"],
-        ["Name" => "accesstype", "Type" => "TEXT"]
+        ["Name" => "accesstype", "Type" => "VARCHAR(32)"],
+        ["Name" => "", "Type" => "", "Special" => "CONSTRAINT fleet_type_pk PRIMARY KEY (typeid, roletype, roleid, accesstype)"]
     );
 
     $siteDatabase->register(
@@ -60,9 +61,9 @@
         ["Name" => "type", "Type" => "BIGINT"],
         ["Name" => "commanderid", "Type" => "BIGINT"],
         ["Name" => "starttime", "Type" => "BIGINT"],
-        ["Name" => "endtime", "Type" => "BIGINT"],
+        ["Name" => "endtime", "Type" => "BIGINT", "Special" => "DEFAULT NULL"],
         ["Name" => "status", "Type" => "TEXT"],
-        ["Name" => "sharekey", "Type" => "TEXT"],
+        ["Name" => "sharekey", "Type" => "VARCHAR(32)"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (type)"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (commanderid)"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (sharekey)"],
@@ -71,9 +72,9 @@
 
     $siteDatabase->register(
         "sharesubscriptions",
-        ["Name" => "sharekey", "Type" => "TEXT"],
+        ["Name" => "sharekey", "Type" => "VARCHAR(32)"],
         ["Name" => "characterid", "Type" => "BIGINT"],
-        ["Name" => "", "Type" => "", "Special" => "CONSTRAINT snapshot_pk PRIMARY KEY (sharekey, characterid)"]
+        ["Name" => "", "Type" => "", "Special" => "CONSTRAINT subscription_pk PRIMARY KEY (sharekey, characterid)"]
     );
 
     $siteDatabase->register(
@@ -93,12 +94,13 @@
         ["Name" => "wingid", "Type" => "BIGINT"],
         ["Name" => "squadid", "Type" => "BIGINT"],
         ["Name" => "starttime", "Type" => "BIGINT"],
-        ["Name" => "endtime", "Type" => "BIGINT"],
+        ["Name" => "endtime", "Type" => "BIGINT", "Special" => "DEFAULT NULL"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (fleetid)"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (characterid)"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (corporationid)"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (allianceid)"],
-        ["Name" => "", "Type" => "", "Special" => "INDEX (starttime, endtime)"]
+        ["Name" => "", "Type" => "", "Special" => "INDEX (starttime)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (endtime)"]
     );
 
     $siteDatabase->register(
@@ -107,10 +109,11 @@
         ["Name" => "characterid", "Type" => "BIGINT"],
         ["Name" => "systemid", "Type" => "BIGINT"],
         ["Name" => "starttime", "Type" => "BIGINT"],
-        ["Name" => "endtime", "Type" => "BIGINT"],
+        ["Name" => "endtime", "Type" => "BIGINT", "Special" => "DEFAULT NULL"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (fleetid)"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (characterid)"],
-        ["Name" => "", "Type" => "", "Special" => "INDEX (starttime, endtime)"]
+        ["Name" => "", "Type" => "", "Special" => "INDEX (starttime)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (endtime)"]
     );
 
     $siteDatabase->register(
@@ -119,11 +122,12 @@
         ["Name" => "characterid", "Type" => "BIGINT"],
         ["Name" => "shipid", "Type" => "BIGINT"],
         ["Name" => "starttime", "Type" => "BIGINT"],
-        ["Name" => "endtime", "Type" => "BIGINT"],
+        ["Name" => "endtime", "Type" => "BIGINT", "Special" => "DEFAULT NULL"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (fleetid)"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (characterid)"],
         ["Name" => "", "Type" => "", "Special" => "INDEX (shipid)"],
-        ["Name" => "", "Type" => "", "Special" => "INDEX (starttime, endtime)"]
+        ["Name" => "", "Type" => "", "Special" => "INDEX (starttime)"],
+        ["Name" => "", "Type" => "", "Special" => "INDEX (endtime)"]
     );
 
     $siteDatabase->register(

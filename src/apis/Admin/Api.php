@@ -72,6 +72,40 @@
                     $this->updateGroup($_POST["Type"], $_POST["ID"], $_POST["Change"], $_POST["Role"]);
 
                 }
+                elseif (
+                    $_POST["Action"] == "Create_Fleet_Type"
+                    and isset($_POST["Fleet_Type_Name"])
+                ){
+
+                    $this->createFleetType($_POST["Fleet_Type_Name"]);
+
+                }
+                elseif (
+                    $_POST["Action"] == "Delete_Fleet_Type"
+                    and isset($_POST["Fleet_Type_ID"])
+                ){
+
+                    $this->deleteFleetType($_POST["Fleet_Type_ID"]);
+
+                }
+                elseif (
+                    $_POST["Action"] == "Update_Fleet_Type_Access"
+                    and isset($_POST["Fleet_Type_ID"])
+                    and isset($_POST["Role_Type"])
+                    and isset($_POST["Role_ID"])
+                    and isset($_POST["Access_Type"])
+                    and isset($_POST["Change"])
+                ){
+
+                    $this->updateFleetTypeAccess(
+                        $_POST["Change"],
+                        $_POST["Fleet_Type_ID"],
+                        $_POST["Role_Type"],
+                        $_POST["Role_ID"],
+                        $_POST["Access_Type"]
+                    );
+
+                }
                 else {
 
                     header($_SERVER["SERVER_PROTOCOL"] . " 400 Bad Request");
@@ -277,6 +311,11 @@
                 $deletionQuery->bindParam(":id", $id, \PDO::PARAM_INT);
                 $deletionQuery->execute();
 
+                $cleanupQuery = $this->databaseConnection->prepare("DELETE FROM fleettypeaccess WHERE roletype=:roletype AND roleid=:roleid");
+                $cleanupQuery->bindParam(":roletype", $type);
+                $cleanupQuery->bindParam(":roleid", $id, \PDO::PARAM_INT);
+                $cleanupQuery->execute();
+
                 $this->logger->make_log_entry(logType: "Access Group Deleted", logDetails: "Deleted " . $type . " Group with ID " . $id . ".");
 
                 echo json_encode(["Status" => "Success"]);
@@ -354,6 +393,101 @@
 
             }
 
+        }
+
+        private function getFleetTypes() {
+
+            $fleetTypes = [];
+            
+            $checkQuery = $this->databaseConnection->prepare("SELECT id, name FROM fleettypes");
+            $checkQuery->execute();
+            $checkData = $checkQuery->fetchAll();
+            
+            if (!empty($checkData)) {
+
+                foreach ($checkData as $eachFleetType) {
+                
+                    $fleetTypes[$eachFleetType["id"]] = ["ID" => $eachFleetType["id"], "Name" => $eachFleetType["name"]];
+
+                }
+                
+            }
+
+            return $fleetTypes;
+            
+        }
+
+        private function createFleetType($name) {
+
+            $createQuery = $this->databaseConnection->prepare("INSERT INTO fleettypes (name) VALUES (:name)");
+            $createQuery->bindParam(":name", $name);
+            $createQuery->execute();
+
+            echo json_encode(["Status" => "Success"]);
+            
+        }
+
+        private function deleteFleetType($incomingID) {
+
+            $fleetTypes = $this->getFleetTypes();
+
+            if (isset($fleetTypes[$incomingID])) {
+
+                $typeClass = "\\Ridley\\Objects\\Admin\\FleetTypes\\" . $this->configVariables["Auth Type"];
+                $fleetType = new $typeClass($this->dependencies, $fleetTypes[$incomingID]["ID"], $fleetTypes[$incomingID]["Name"]);
+
+                $fleetType->delete();
+
+                echo json_encode(["Status" => "Success"]);
+
+            }
+            else {
+
+                header($_SERVER["SERVER_PROTOCOL"] . " 400 Bad Request");
+                throw new \Exception("Tried to delete a nonexistent fleet type.");
+                
+            }
+        
+        }
+
+        private function updateFleetTypeAccess($action, $fleetTypeID, $groupType, $groupID, $accessType) {
+
+            $fleetTypes = $this->getFleetTypes();
+
+            if (isset($fleetTypes[$fleetTypeID])) {
+
+                $typeClass = "\\Ridley\\Objects\\Admin\\FleetTypes\\" . $this->configVariables["Auth Type"];
+                $fleetType = new $typeClass($this->dependencies, $fleetTypes[$fleetTypeID]["ID"], $fleetTypes[$fleetTypeID]["Name"]);
+
+                if ($action == "Add") {
+
+                    $fleetType->addAccess($groupType, $groupID, $accessType);
+
+                    echo json_encode(["Status" => "Success"]);
+
+                }
+                elseif ($action == "Remove") {
+
+                    $fleetType->removeAccess($groupType, $groupID, $accessType);
+                    
+                    echo json_encode(["Status" => "Success"]);
+
+                }
+                else {
+
+                    header($_SERVER["SERVER_PROTOCOL"] . " 400 Bad Request");
+                    throw new \Exception("Unknown modification action for a fleet type.");
+
+                }
+
+            }
+            else {
+
+                header($_SERVER["SERVER_PROTOCOL"] . " 400 Bad Request");
+                throw new \Exception("Tried to modify access for a nonexistent fleet type.");
+
+            }
+        
         }
 
     }

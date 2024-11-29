@@ -48,6 +48,28 @@
 
         }
 
+        protected function character_fleet(array $arguments) {
+
+            return $this->makeRequest(
+                endpoint: "/characters/{character_id}/fleet/",
+                url: $this->esiURL . "dev/characters/" . $arguments["character_id"] . "/fleet/?datasource=tranquility",
+                accessToken: $this->accessToken,
+                retries: (isset($arguments["retries"]) ? $arguments["retries"] : 0)
+            );
+
+        }
+
+        protected function fleet_wings(array $arguments) {
+
+            return $this->makeRequest(
+                endpoint: "/fleets/{fleet_id}/wings/",
+                url: $this->esiURL . "latest/fleets/" . $arguments["fleet_id"] . "/wings/?datasource=tranquility",
+                accessToken: $this->accessToken,
+                retries: (isset($arguments["retries"]) ? $arguments["retries"] : 0)
+            );
+
+        }
+
     }
 
 ?>

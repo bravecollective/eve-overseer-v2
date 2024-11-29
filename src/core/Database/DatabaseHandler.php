@@ -44,7 +44,8 @@
                     ["Name" => "id", "Type" => "TEXT"], 
                     ["Name" => "isloggedin", "Type" => "TINYINT"], 
                     ["Name" => "accessroles", "Type" => "TEXT"], 
-                    ["Name" => "characterid", "Type" => "TEXT"], 
+                    ["Name" => "coregroups", "Type" => "TEXT"], 
+                    ["Name" => "characterid", "Type" => "BIGINT"], 
                     ["Name" => "charactername", "Type" => "TEXT"], 
                     ["Name" => "currentpage", "Type" => "TEXT"], 
                     ["Name" => "csrftoken", "Type" => "TEXT"], 
@@ -56,7 +57,7 @@
                 "Name" => "refreshtokens",
                 "Columns" => [
                     ["Name" => "type", "Type" => "TEXT"], 
-                    ["Name" => "characterid", "Type" => "TEXT"], 
+                    ["Name" => "characterid", "Type" => "BIGINT"], 
                     ["Name" => "scopes", "Type" => "TEXT"], 
                     ["Name" => "refreshtoken", "Type" => "TEXT"], 
                     ["Name" => "accesstoken", "Type" => "TEXT"], 

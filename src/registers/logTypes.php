@@ -23,4 +23,37 @@
             
     */
 
+    $siteLogger->register(
+        "user-input-exceptions", 
+        "User Input Exceptions", 
+        "User Input Not Found", 
+        "Missing Hardcoded Input", 
+        "Bad Hardcoded Input",
+        "Missing User Input",
+        "Bad User Input"
+    );
+
+    $siteLogger->register(
+        "fleet-tracking", 
+        "Fleet Tracking", 
+        "Started Tracking", 
+        "Restarted Tracking", 
+        "Fleet Tracker Changed",
+        "Stopped Tracking"
+    );
+
+    $siteLogger->register(
+        "share-subscriptions", 
+        "Share Subscriptions", 
+        "Subscribed to Fleet"
+    );
+
+    $siteLogger->register(
+        "checker_errors", 
+        "Checker Errors", 
+        "Checker Fleet Error", 
+        "Checker SQL Error", 
+        "Checker Unknown Error"
+    );
+
 ?>

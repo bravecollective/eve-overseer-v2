@@ -49,7 +49,7 @@
         useController: true,
         useAPI: true,
         loginRequired: true, 
-        accessRoles: ["Blue"]
+        accessRoles: ["Member"]
     );
 
     $this->registerPage(
@@ -60,7 +60,7 @@
         useController: true,
         useAPI: true,
         loginRequired: true, 
-        accessRoles: ["View Stats", "View All Stats"]
+        accessRoles: ["View Fleet Stats"]
     );
 
     $this->registerPage(
@@ -71,7 +71,7 @@
         useController: true,
         useAPI: true,
         loginRequired: true, 
-        accessRoles: ["FC", "Full FC"]
+        accessRoles: ["FC"]
     );
 
     $this->registerPage(
@@ -82,7 +82,7 @@
         useController: true,
         useAPI: true,
         loginRequired: true, 
-        accessRoles: ["CEO", "View All PAP Data"]
+        accessRoles: ["CEO", "View PAP Data"]
     );
 
     $this->registerPage(
@@ -93,7 +93,7 @@
         useController: true,
         useAPI: true,
         loginRequired: true, 
-        accessRoles: ["CEO", "View All PAP Data"]
+        accessRoles: ["CEO", "View PAP Data"]
     );
     
     

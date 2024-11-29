@@ -32,4 +32,16 @@
         requiredArguments: ["ids"]
     );
 
+    $this->register(
+        endpoint: "/characters/{character_id}/fleet/",
+        method: "character_fleet",
+        requiredArguments: ["character_id"]
+    );
+
+    $this->register(
+        endpoint: "/fleets/{fleet_id}/wings/",
+        method: "fleet_wings",
+        requiredArguments: ["fleet_id"]
+    );
+
 ?>
