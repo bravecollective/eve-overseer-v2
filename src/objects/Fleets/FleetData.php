@@ -26,6 +26,14 @@
         private $ShipGroupsAndTypes = [];
         private $AlliancesAndCorporations = [];
         private $RegionsAndSystems = [];
+        private $headerData = [
+            "Fleet Name" => "",
+            "Fleet Type" => "", 
+            "Commander Name" => "",
+            "Fleet Members" => 0,
+            "User Accounts" => 0
+        ];
+        private $knownAccounts = [];
 
         public $fleetFound = false;
 
@@ -50,27 +58,29 @@
             //Pull Fleet and Commander IDs
             if ($fromShareKey) {
 
-                $fleetQuery = $this->databaseConnection->prepare("SELECT id, commanderid FROM fleets WHERE status=:status AND sharekey=:sharekey");
+                $fleetQuery = $this->databaseConnection->prepare("SELECT fleets.id AS id, fleets.name AS name, fleettypes.name AS type, commanderid FROM fleets LEFT JOIN fleettypes ON fleets.type = fleettypes.id WHERE status=:status AND sharekey=:sharekey");
                 $fleetQuery->bindValue(":status", "Active");
                 $fleetQuery->bindParam(":sharekey", $this->incomingShareKey);
 
             }
             else {
 
-                $fleetQuery = $this->databaseConnection->prepare("SELECT id, commanderid FROM fleets WHERE status=:status AND id=:id");
+                $fleetQuery = $this->databaseConnection->prepare("SELECT fleets.id AS id, fleets.name AS name, fleettypes.name AS type, commanderid FROM fleets LEFT JOIN fleettypes ON fleets.type = fleettypes.id WHERE status=:status AND fleets.id=:id");
                 $fleetQuery->bindValue(":status", "Active");
                 $fleetQuery->bindParam(":id", $this->incomingFleetID);
 
             }
 
             $fleetQuery->execute();
-            $fleetIDs = $fleetQuery->fetch(\PDO::FETCH_ASSOC);
+            $fleetInfo = $fleetQuery->fetch(\PDO::FETCH_ASSOC);
 
-            if ($fleetIDs !== false) {
+            if ($fleetInfo !== false) {
 
-                $fleetID = $fleetIDs["id"];
-                $commanderID = $fleetIDs["commanderid"];
+                $fleetID = $fleetInfo["id"];
+                $commanderID = $fleetInfo["commanderid"];
                 $commanderSystemID = null;
+                $this->headerData["Fleet Name"] = $fleetInfo["name"];
+                $this->headerData["Fleet Type"] = $fleetInfo["type"];
 
             }
             else {
@@ -139,6 +149,7 @@
                     fleetmembers.characterid as characterid, 
                     fleetmembers.corporationid AS corporationid, 
                     fleetmembers.allianceid AS allianceid, 
+                    CONCAT(useraccounts.accounttype, ':', useraccounts.accountid) AS account,
                     fleetmembers.role AS role, 
                     fleetmembers.wingid AS wingid, 
                     fleetmembers.squadid AS squadid,
@@ -148,6 +159,13 @@
                     fleetlocations.systemid AS systemid,
                     evesystems.regionid AS regionid
                 FROM fleetmembers 
+                INNER JOIN userlinks
+                ON 
+                    fleetmembers.characterid = userlinks.characterid
+                INNER JOIN useraccounts
+                ON 
+                    userlinks.accounttype = useraccounts.accounttype 
+                    AND userlinks.accountid = useraccounts.accountid 
                 INNER JOIN fleetships
                 ON 
                     fleetmembers.fleetid = fleetships.fleetid 
@@ -177,6 +195,13 @@
             $incomingMembers = $fleetMembersQuery->fetchAll(\PDO::FETCH_ASSOC);
 
             foreach ($incomingMembers as $eachMember) {
+
+                $this->headerData["Fleet Members"]++;
+
+                if (!in_array($eachMember["account"], $this->knownAccounts)) {
+                    $this->knownAccounts[] = $eachMember["account"];
+                    $this->headerData["User Accounts"]++;
+                }
 
                 $setOfIDs[$eachMember["characterid"]] = true;
                 $setOfIDs[$eachMember["corporationid"]] = true;
@@ -243,6 +268,10 @@
                     "Region" => $resolvedIDs["region"][$eachMember["regionid"]] ?? "[Unknown Region Name]", 
                     "System" => $resolvedIDs["solar_system"][$eachMember["systemid"]] ?? "[Unknown System Name]"
                 ];
+
+                if ($commanderID == $eachMember["characterid"]) {
+                    $this->headerData["Commander Name"] = $memberData["Name"];
+                }
 
                 //Member Wing Doesn't Exist
                 if (
@@ -604,35 +633,59 @@
 
             <div class="row mt-3">
 
+                <div class="col-lg-4">
+
+                    <h4><?php echo htmlspecialchars($this->headerData["Fleet Name"]); ?></h4>
+                    <h5 class="text-secondary"><?php echo htmlspecialchars($this->headerData["Fleet Type"]); ?></h5>
+
+                </div>
+                <div class="col-lg-4 text-center">
+
+                    <h4><?php echo htmlspecialchars($this->headerData["Commander Name"]); ?></h5>
+
+                </div>
+                <div class="col-lg-4 text-end">
+
+                    <h4>Fleet Members: <?php echo htmlspecialchars($this->headerData["Fleet Members"]); ?></h4>
+                    <h5 class="text-secondary">User Accounts: <?php echo htmlspecialchars($this->headerData["User Accounts"]); ?></h5>
+
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div class="row mt-3">
+
                 <div class="col-lg-3">
 
-                    <h3>Ship Breakdown</h3>
+                    <h4>Ship Breakdown</h4>
 
-                    <ul class="list-group mt-3">
+                    <ul class="list-group rounded-0 mt-3">
                         <?php $this->renderShips(); ?>
                     </ul>
 
-                    <h3 class="mt-3">Location Breakdown</h3>
+                    <h4 class="mt-3">Location Breakdown</h4>
 
-                    <ul class="list-group mt-3">
+                    <ul class="list-group rounded-0 mt-3">
                         <?php $this->renderLocations(); ?>
                     </ul>
 
                 </div>
                 <div class="col-lg-3">
 
-                    <h3>Affiliation Breakdown</h3>
+                    <h4>Affiliation Breakdown</h4>
 
-                    <ul class="list-group mt-3">
+                    <ul class="list-group rounded-0 mt-3">
                         <?php $this->renderAffiliations(); ?>
                     </ul>
 
                 </div>
                 <div class="col-lg-6">
 
-                    <h3>Fleet Structure</h3>
+                    <h4>Fleet Structure</h4>
 
-                    <ul class="list-group mt-3">
+                    <ul class="list-group rounded-0 mt-3">
                         <?php $this->renderMembers(); ?>
                     </ul>
 

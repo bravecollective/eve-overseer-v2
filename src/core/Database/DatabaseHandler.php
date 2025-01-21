@@ -23,10 +23,11 @@
             [
                 "Name" => "access",
                 "Columns" => [
-                    ["Name" => "type", "Type" => "TEXT"], 
+                    ["Name" => "type", "Type" => "VARCHAR(32)"], 
                     ["Name" => "id", "Type" => "BIGINT"], 
                     ["Name" => "name", "Type" => "TEXT"], 
-                    ["Name" => "roles", "Type" => "TEXT"]
+                    ["Name" => "roles", "Type" => "TEXT"],
+                    ["Name" => "", "Type" => "", "Special" => "CONSTRAINT access_pk PRIMARY KEY (type, id)"]
                 ]
             ],
             [

@@ -17,6 +17,9 @@
                                 <a href="#" class="nav-link active" id="admin-permissions-tab" data-bs-toggle="tab" data-bs-target="#admin-permissions" type="button" role="tab" aria-controls="admin-permissions" aria-selected="true">Permissions</a>
                             </li>
                             <li class="nav-item" role="presentation">
+                                <a href="#" class="nav-link" id="admin-entity-access-tab" data-bs-toggle="tab" data-bs-target="#admin-entity-access" type="button" role="tab" aria-controls="admin-entity-access" aria-selected="false">Entity Access</a>
+                            </li>
+                            <li class="nav-item" role="presentation">
                                 <a href="#" class="nav-link" id="admin-fleet-types-tab" data-bs-toggle="tab" data-bs-target="#admin-fleet-types" type="button" role="tab" aria-controls="admin-fleet-types" aria-selected="false">Fleet Types</a>
                             </li>
                             <li class="nav-item" role="presentation">
@@ -37,6 +40,16 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="tab-pane fade" id="admin-entity-access" role="tabpanel" aria-labelledby="admin-entity-access-tab">
+                            <div class="row">
+                                <div class="col-lg-4" id="search-column">
+                                    <?php $this->searchTemplate(false, "entity-access-"); ?>
+                                </div>
+                                <div class="col-lg-8" id="entity-access-groups-column">
+                                    <?php $this->entitiesTemplate(); ?>
+                                </div>
+                            </div>
+                        </div>
                         <div class="tab-pane fade" id="admin-fleet-types" role="tabpanel" aria-labelledby="admin-fleet-types-tab">
                             <?php $this->fleetTypesTemplate(); ?>
                         </div>
@@ -50,26 +63,26 @@
             <?php
         }
         
-        protected function searchTemplate() {
+        protected function searchTemplate($for_permissions = true, $prefix = "") {
             
-            if ($this->configVariables["Auth Type"] !== "Neucore") {
+            if (!$for_permissions or $this->configVariables["Auth Type"] !== "Neucore") {
                 ?>
                 
-                    <h3 class="text-light">Add Groups</h3>
+                    <h3 class="text-light">Add <?php echo (($for_permissions) ? "Groups" : "Entities"); ?></h3>
                 
                     <div class="mt-3">
-                        <label class="form-label text-light" for="name-selection">Name</label>
-                        <input type="text" class="form-control" name="name-selection" id="name-selection">
+                        <label class="form-label text-light" for="<?php echo $prefix . "name-selection"; ?>">Name</label>
+                        <input type="text" class="form-control" name="<?php echo $prefix . "name-selection"; ?>" id="<?php echo $prefix . "name-selection"; ?>">
                     </div>
                     
                     <div class="form-check mt-3">
-                        <input class="form-check-input" type="checkbox" value="True" id="strict-selection">
-                        <label class="form-check-label text-light" for="strict-selection">Strict Search</label>
+                        <input class="form-check-input" type="checkbox" value="True" id="<?php echo $prefix . "strict-selection"; ?>">
+                        <label class="form-check-label text-light" for="<?php echo $prefix . "strict-selection"; ?>">Strict Search</label>
                     </div>
                     
                     <div class="mt-3">
-                        <label class="form-label text-light" for="type-selection">Type</label>
-                        <select type="text" class="form-select" name="type-selection" id="type-selection">
+                        <label class="form-label text-light" for="<?php echo $prefix . "type-selection"; ?>">Type</label>
+                        <select type="text" class="form-select" name="<?php echo $prefix . "type-selection"; ?>" id="<?php echo $prefix . "type-selection"; ?>">
                             <option>Character</option>
                             <option>Corporation</option>
                             <option>Alliance</option>
@@ -77,9 +90,9 @@
                     </div>
                     
                     <div class="d-grid mt-4">
-                        <input class="btn btn-success" id="search-button" type="button" value="Search">
+                        <input class="btn btn-success" id="<?php echo $prefix . "search-button"; ?>" type="button" value="Search">
                         
-                        <div id="search-spinner" hidden>
+                        <div id="<?php echo $prefix . "search-spinner"; ?>" hidden>
                             <div class="d-flex justify-content-center">
                                 <div class="spinner-border text-light"></div>
                             </div>
@@ -89,14 +102,14 @@
                     
                     <h4 class="text-white mt-3">Search Results</h4>
                     
-                    <div class="mt-3" id="group-search-results">
+                    <div class="mt-3" id="<?php echo $prefix . "group-search-results"; ?>">
                     
                     </div>
                 
                 <?php
             }
         }
-        
+
         protected function groupsTemplate() {
             
             foreach ($this->model->getGroups() as $groupName => $subGroups) {
@@ -112,6 +125,33 @@
                     foreach ($subGroups as $groupID => $groupClass) {
                         
                         $groupClass->renderAccessPanel();
+                        
+                    }
+                    
+                    ?>
+                
+                </div>
+                
+                <?php
+            }
+            
+        }
+
+        protected function entitiesTemplate() {
+            
+            foreach ($this->model->getEntities() as $typeName => $entities) {
+                
+                ?>
+                
+                <h3 class="text-light" id="entity-access-<?php echo htmlspecialchars(strtolower($typeName)); ?>-group-header"><?php echo htmlspecialchars($typeName); ?> Entity Groups</h3> 
+                
+                <div id="entity-access-<?php echo htmlspecialchars(strtolower($typeName)); ?>-group-list">
+                
+                    <?php
+                    
+                    foreach ($entities as $entityID => $entityClass) {
+                        
+                        $entityClass->renderAccessPanel();
                         
                     }
                     

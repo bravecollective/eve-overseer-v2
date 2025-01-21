@@ -368,6 +368,7 @@ class Fleet:
     def update_core_links(self, entries):
 
         known_accounts = []
+        linked_characters = []
         core_accounts = []
         core_links = []
         
@@ -389,17 +390,18 @@ class Fleet:
 
                     if each_character["id"] not in known_accounts:
 
-                        core_accounts.append((each_character["id"], each_character["name"]))
+                        core_accounts.append((each_character["id"], "Neucore", each_character["name"]))
                         known_accounts.append(each_character["id"])
 
-                    core_links.append((each_character["characterId"], each_character["id"]))
+                    core_links.append((each_character["characterId"], "Neucore", each_character["id"]))
+                    linked_characters.append(each_character["characterId"])
 
                 replace_cursor = self.database_connection.cursor(buffered=True)
 
-                accounts_replace_statement = "REPLACE INTO coreaccounts (coreid, corename) VALUES (%s, %s)"
+                accounts_replace_statement = "REPLACE INTO useraccounts (accountid, accounttype, accountname) VALUES (%s, %s, %s)"
                 replace_cursor.executemany(accounts_replace_statement, core_accounts)
 
-                links_replace_statement = "REPLACE INTO corelinks (characterid, coreid) VALUES (%s, %s)"
+                links_replace_statement = "REPLACE INTO userlinks (characterid, accounttype, accountid) VALUES (%s, %s, %s)"
                 replace_cursor.executemany(links_replace_statement, core_links)
 
                 self.database_connection.commit()
@@ -414,6 +416,60 @@ class Fleet:
                     "/app/v1/players", 
                     core_request.text
                 )
+            
+        non_core_characters = list(set(entries) - set(linked_characters))
+        non_core_accounts = []
+        non_core_links = []
+
+        if non_core_characters:
+            
+            names_call = self.esi_handler.call(
+                "/universe/names/", 
+                ids=non_core_characters, 
+                retries=1
+            )
+
+            if names_call["Success"]:
+
+                non_core_names = {x["id"]: x["name"] for x in names_call["Data"] if x["category"] == "character"}
+
+                for each_character, each_name in non_core_names.items():
+
+                    non_core_accounts.append((each_character, "Character", each_name))
+                    non_core_links.append((each_character, "Character", each_character))
+                    linked_characters.append(each_character)
+
+                replace_cursor = self.database_connection.cursor(buffered=True)
+
+                accounts_replace_statement = "REPLACE INTO useraccounts (accountid, accounttype, accountname) VALUES (%s, %s, %s)"
+                replace_cursor.executemany(accounts_replace_statement, non_core_accounts)
+
+                links_replace_statement = "REPLACE INTO userlinks (characterid, accounttype, accountid) VALUES (%s, %s, %s)"
+                replace_cursor.executemany(links_replace_statement, non_core_links)
+
+                self.database_connection.commit()
+                replace_cursor.close()
+
+            else:
+
+                raise FleetException(
+                    "Failed to get names of new non-core fleet members!", 
+                    self.id, 
+                    self.commander_id, 
+                    "/universe/names/", 
+                    str(names_call["Data"])
+                )
+            
+        non_tracked_characters = list(set(entries) - set(linked_characters))
+        if non_tracked_characters:
+
+            raise FleetException(
+                "Failed to get core account or name for some fleet members!", 
+                self.id, 
+                self.commander_id, 
+                "/app/v1/players AND /universe/names/", 
+                str(non_tracked_characters)
+            )
 
 
     def update_locations(self, new_entries, closing_entries):

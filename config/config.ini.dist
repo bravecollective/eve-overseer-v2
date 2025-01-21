@@ -3,10 +3,11 @@ ClientID =
 ;When Using Environment Variables: ENV_OVERSEER_EVE_CLIENT_ID - (REQUIRED)
 ClientSecret =
 ;When Using Environment Variables: ENV_OVERSEER_EVE_CLIENT_SECRET - (REQUIRED)
-ClientScopes = esi-search.search_structures.v1 esi-fleets.read_fleet.v1 esi-fleets.write_fleet.v1
+ClientScopes = esi-search.search_structures.v1 esi-corporations.read_corporation_membership.v1 esi-fleets.read_fleet.v1 esi-fleets.write_fleet.v1
 ;When Using Environment Variables: ENV_OVERSEER_EVE_CLIENT_SCOPES - (DEFAULT "esi-search.search_structures.v1 esi-fleets.read_fleet.v1 esi-fleets.write_fleet.v1")
 ;Client Scopes is a string of space-separated scopes that are used for relay characters. The following are required:
 ; esi-search.search_structures.v1
+; esi-corporations.read_corporation_membership.v1
 ; esi-fleets.read_fleet.v1
 ; esi-fleets.write_fleet.v1
 DefaultScopes = esi-search.search_structures.v1

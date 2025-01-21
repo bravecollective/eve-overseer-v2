@@ -8,4 +8,4 @@ class FleetException(Exception):
         self.attempted_action = attempted_action
         self.additional_data = additional_data
 
-        super().__init__(msg=readable_message)
+        super().__init__(readable_message)

@@ -53,12 +53,31 @@
 
                 }
                 elseif (
+                    $_POST["Action"] == "Add_Entity"
+                    and isset($_POST["Type"])
+                    and isset($_POST["ID"])
+                    and isset($_POST["Name"])
+                ){
+
+                    $this->addEntity($_POST["Type"], $_POST["ID"], $_POST["Name"]);
+
+                }
+                elseif (
                     $_POST["Action"] == "Remove_Group"
                     and isset($_POST["Type"])
                     and isset($_POST["ID"])
                 ){
 
                     $this->removeGroup($_POST["Type"], $_POST["ID"]);
+
+                }
+                elseif (
+                    $_POST["Action"] == "Remove_Entity"
+                    and isset($_POST["Type"])
+                    and isset($_POST["ID"])
+                ){
+
+                    $this->removeEntity($_POST["Type"], $_POST["ID"]);
 
                 }
                 elseif (
@@ -70,6 +89,18 @@
                 ){
 
                     $this->updateGroup($_POST["Type"], $_POST["ID"], $_POST["Change"], $_POST["Role"]);
+
+                }
+                elseif (
+                    $_POST["Action"] == "Update_Entity"
+                    and isset($_POST["Type"])
+                    and isset($_POST["ID"])
+                    and isset($_POST["Group_Type"])
+                    and isset($_POST["Group_ID"])
+                    and isset($_POST["Change"])
+                ){
+
+                    $this->updateEntity($_POST["Type"], $_POST["ID"], $_POST["Group_Type"], $_POST["Group_ID"], $_POST["Change"]);
 
                 }
                 elseif (
@@ -129,9 +160,9 @@
 
         }
 
-        private function checkGroupExists($type, $id) {
+        private function checkGroupExists($type, $id, $table = "access") {
 
-            $checkQuery = $this->databaseConnection->prepare("SELECT id FROM access WHERE type=:type AND id=:id");
+            $checkQuery = $this->databaseConnection->prepare("SELECT id FROM $table WHERE type=:type AND id=:id");
             $checkQuery->bindParam(":type", $type);
             $checkQuery->bindParam(":id", $id, \PDO::PARAM_INT);
             $checkQuery->execute();
@@ -302,6 +333,41 @@
 
         }
 
+        private function addEntity($type, $id, $name) {
+
+            if ($this->checkEntityExists($type, $id, $name)) {
+
+                if (!$this->checkGroupExists($type, $id, "entitytypes")) {
+
+                    $creationQuery = $this->databaseConnection->prepare("INSERT INTO entitytypes (type, id, name) VALUES (:type, :id, :name)");
+                    $creationQuery->bindParam(":type", $type);
+                    $creationQuery->bindParam(":id", $id, \PDO::PARAM_INT);
+                    $creationQuery->bindParam(":name", $name);
+                    $creationQuery->execute();
+
+                    $this->logger->make_log_entry(logType: "Entity Type Created", logDetails: "Created " . $type . " Entity " . $name . " with ID " . $id . ".");
+
+                    $addedEntity = new \Ridley\Objects\Admin\EntityAccessGroup\EntityAccess($this->dependencies, $id, $name, $type);
+                    $addedEntity->renderAccessPanel();
+
+                }
+                else {
+
+                    header($_SERVER["SERVER_PROTOCOL"] . " 400 Bad Request");
+                    throw new \Exception("An entity that was requested to be added already exists.", 12003);
+
+                }
+
+            }
+            else {
+
+                header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+                throw new \Exception("The ID or Name of an entity that was requested to be added does not exist.", 12004);
+
+            }
+
+        }
+
         private function removeGroup($type, $id) {
 
             if ($this->checkGroupExists($type, $id)) {
@@ -325,6 +391,34 @@
 
                 header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
                 throw new \Exception("The group that was requested to be removed does not exist.", 12005);
+
+            }
+
+        }
+
+        private function removeEntity($type, $id) {
+
+            if ($this->checkGroupExists($type, $id, "entitytypes")) {
+
+                $deletionQuery = $this->databaseConnection->prepare("DELETE FROM entitytypes WHERE type=:type AND id=:id");
+                $deletionQuery->bindParam(":type", $type);
+                $deletionQuery->bindParam(":id", $id, \PDO::PARAM_INT);
+                $deletionQuery->execute();
+
+                $cleanupQuery = $this->databaseConnection->prepare("DELETE FROM entitytypeaccess WHERE entitytype=:entitytype AND entityid=:entityid");
+                $cleanupQuery->bindParam(":entitytype", $type);
+                $cleanupQuery->bindParam(":entityid", $id, \PDO::PARAM_INT);
+                $cleanupQuery->execute();
+
+                $this->logger->make_log_entry(logType: "Entity Type Deleted", logDetails: "Deleted " . $type . " Entity with ID " . $id . ".");
+
+                echo json_encode(["Status" => "Success"]);
+
+            }
+            else {
+
+                header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+                throw new \Exception("The entity that was requested to be removed does not exist.", 12005);
 
             }
 
@@ -395,6 +489,51 @@
 
         }
 
+        private function updateEntity($type, $id, $groupType, $groupID, $change) {
+
+            if ($this->checkGroupExists($type, $id, "entitytypes") and $this->checkGroupExists($groupType, $groupID)) {
+
+                if ($change === "Added") {
+
+                    $addQuery = $this->databaseConnection->prepare("INSERT INTO entitytypeaccess (entitytype, entityid, roletype, roleid) VALUES (:entitytype, :entityid, :roletype, :roleid)");
+                    $addQuery->bindParam(":entitytype", $type);
+                    $addQuery->bindParam(":entityid", $id, \PDO::PARAM_INT);
+                    $addQuery->bindParam(":roletype", $groupType);
+                    $addQuery->bindParam(":roleid", $groupID, \PDO::PARAM_INT);
+                    $addQuery->execute();
+
+                }
+                elseif ($change === "Removed") {
+
+                    $removeQuery = $this->databaseConnection->prepare("DELETE FROM entitytypeaccess WHERE entitytype=:entitytype AND entityid=:entityid AND roletype=:roletype AND roleid=:roleid");
+                    $removeQuery->bindParam(":entitytype", $type);
+                    $removeQuery->bindParam(":entityid", $id, \PDO::PARAM_INT);
+                    $removeQuery->bindParam(":roletype", $groupType);
+                    $removeQuery->bindParam(":roleid", $groupID, \PDO::PARAM_INT);
+                    $removeQuery->execute();
+
+                }
+                else {
+
+                    header($_SERVER["SERVER_PROTOCOL"] . " 400 Bad Request");
+                    throw new \Exception("Invalid type of change was received for an entity.", 12006);
+
+                }
+
+            }
+            else {
+
+                header($_SERVER["SERVER_PROTOCOL"] . " 400 Bad Request");
+                throw new \Exception("A change was requested using an invalid entity or role.", 12008);
+
+            }
+
+            $this->logger->make_log_entry(logType: "Entity Type Updated", logDetails: $type . " Entity with ID " . $id . " - " . $groupType . " Group with ID " . $groupID . " " . $change);
+
+            echo json_encode(["Status" => "Success"]);
+
+        }
+
         private function getFleetTypes() {
 
             $fleetTypes = [];
@@ -423,6 +562,7 @@
             $createQuery->bindParam(":name", $name);
             $createQuery->execute();
 
+            $this->logger->make_log_entry(logType: "Fleet Type Created", logDetails: "Created Fleet Type " . $name . ".");
             echo json_encode(["Status" => "Success"]);
             
         }
@@ -438,6 +578,7 @@
 
                 $fleetType->delete();
 
+                $this->logger->make_log_entry(logType: "Fleet Type Deleted", logDetails: "Deleted Fleet Type " . $fleetTypes[$incomingID]["Name"] . ".");
                 echo json_encode(["Status" => "Success"]);
 
             }
@@ -463,15 +604,11 @@
 
                     $fleetType->addAccess($groupType, $groupID, $accessType);
 
-                    echo json_encode(["Status" => "Success"]);
-
                 }
                 elseif ($action == "Remove") {
 
                     $fleetType->removeAccess($groupType, $groupID, $accessType);
                     
-                    echo json_encode(["Status" => "Success"]);
-
                 }
                 else {
 
@@ -487,7 +624,10 @@
                 throw new \Exception("Tried to modify access for a nonexistent fleet type.");
 
             }
-        
+
+            $this->logger->make_log_entry(logType: "Fleet Type Updated", logDetails: "Updated Fleet Type " . $fleetTypes[$fleetTypeID]["Name"] . ". " . $action . " access to " . $groupType . " group with ID " . $groupID . ".");
+            echo json_encode(["Status" => "Success"]);
+
         }
 
     }

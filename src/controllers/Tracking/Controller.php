@@ -24,7 +24,7 @@
                     $this->configVariables
                 );
                 
-                $auth->login("FC", $this->configVariables["Client Scopes"]);
+                $auth->login("FC", "esi-search.search_structures.v1 esi-fleets.read_fleet.v1 esi-fleets.write_fleet.v1");
                 
             }
             

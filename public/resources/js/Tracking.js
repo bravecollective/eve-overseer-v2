@@ -184,6 +184,7 @@ function toggleSharedTracking(share_key, tab_number) {
         success: function(result) {
             
             shared_fleets[tab_number] = share_key;
+            $(`.track-shared[data-share-tab-number='${tab_number}']`).removeClass("btn-outline-primary btn-outline-danger btn-outline-warning");
             $(`.track-shared[data-share-tab-number='${tab_number}']`).addClass("btn-outline-success");
             $(`.track-shared[data-share-tab-number='${tab_number}']`).text("Tracking");
             $(`#shared-fleet-${tab_number}-tab`).text(result["Name"]);

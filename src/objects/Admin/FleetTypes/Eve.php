@@ -22,7 +22,7 @@
         
         private function getGroups($onlyIDs=false) {
             
-            $checkQuery = $this->databaseConnection->prepare("SELECT id, name, type FROM access WHERE type IN (:type_char, :type_corp, :type_ally)");
+            $checkQuery = $this->databaseConnection->prepare("SELECT id, name, type FROM access WHERE type IN (:type_char, :type_corp, :type_ally) ORDER BY type, name");
             $checkQuery->bindValue(":type_char", "Character");
             $checkQuery->bindValue(":type_corp", "Corporation");
             $checkQuery->bindValue(":type_ally", "Alliance");
@@ -95,7 +95,7 @@
                 ?>
                 
                 <div class="card bg-dark text-white mt-3 mb-3">
-                    <h4 class="card-header"><?php echo htmlspecialchars($eachGroup["name"]); ?></h4>
+                    <h4 class="card-header"><?php echo ("[" . htmlspecialchars($eachGroup["type"]) . "] ". htmlspecialchars($eachGroup["name"])); ?></h4>
                     <div class="card-body">
                         <?php
                         

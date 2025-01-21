@@ -27,6 +27,24 @@
     */
 
     $siteDatabase->register(
+        "entitytypes",
+        ["Name" => "type", "Type" => "VARCHAR(32)"],
+        ["Name" => "id", "Type" => "BIGINT"],
+        ["Name" => "name", "Type" => "TEXT"],
+        ["Name" => "", "Type" => "", "Special" => "CONSTRAINT entity_type_pk PRIMARY KEY (type, id)"]
+    );
+
+    $siteDatabase->register(
+        "entitytypeaccess",
+        ["Name" => "entitytype", "Type" => "VARCHAR(32)"],
+        ["Name" => "entityid", "Type" => "BIGINT"],
+        ["Name" => "roletype", "Type" => "VARCHAR(32)"],
+        ["Name" => "roleid", "Type" => "BIGINT"],
+        ["Name" => "", "Type" => "", "Special" => "CONSTRAINT entity_type_access_pk PRIMARY KEY (entitytype, entityid, roletype, roleid)"],
+        ["Name" => "", "Type" => "", "Special" => "FOREIGN KEY (roletype, roleid) REFERENCES access(type, id) ON DELETE CASCADE"]
+    );
+
+    $siteDatabase->register(
         "fleettypes",
         ["Name" => "id", "Type" => "BIGINT", "Special" => "primary key AUTO_INCREMENT"],
         ["Name" => "name", "Type" => "TEXT"]
@@ -42,16 +60,18 @@
     );
 
     $siteDatabase->register(
-        "coreaccounts",
-        ["Name" => "coreid", "Type" => "BIGINT", "Special" => "primary key"],
-        ["Name" => "corename", "Type" => "TEXT"]
+        "useraccounts",
+        ["Name" => "accountid", "Type" => "BIGINT"],
+        ["Name" => "accounttype", "Type" => "ENUM('Neucore', 'Character')"],
+        ["Name" => "accountname", "Type" => "TEXT"],
+        ["Name" => "", "Type" => "", "Special" => "CONSTRAINT user_account_pk PRIMARY KEY (accounttype, accountid)"]
     );
 
     $siteDatabase->register(
-        "corelinks",
+        "userlinks",
         ["Name" => "characterid", "Type" => "BIGINT", "Special" => "primary key"],
-        ["Name" => "coreid", "Type" => "BIGINT"],
-        ["Name" => "", "Type" => "", "Special" => "INDEX (coreid)"]
+        ["Name" => "accounttype", "Type" => "ENUM('Neucore', 'Character')"],
+        ["Name" => "accountid", "Type" => "BIGINT"]
     );
 
     $siteDatabase->register(

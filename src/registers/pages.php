@@ -82,7 +82,7 @@
         useController: true,
         useAPI: true,
         loginRequired: true, 
-        accessRoles: ["CEO", "View PAP Data"]
+        accessRoles: ["Entity Leadership", "View PAP Data"]
     );
 
     $this->registerPage(
@@ -93,7 +93,7 @@
         useController: true,
         useAPI: true,
         loginRequired: true, 
-        accessRoles: ["CEO", "View PAP Data"]
+        accessRoles: ["Entity Leadership", "View PAP Data"]
     );
     
     

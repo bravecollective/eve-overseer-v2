@@ -22,7 +22,7 @@
         
         private function getGroups($onlyIDs=false) {
             
-            $checkQuery = $this->databaseConnection->prepare("SELECT id, name, type FROM access WHERE type=:type_core");
+            $checkQuery = $this->databaseConnection->prepare("SELECT id, name, type FROM access WHERE type=:type_core ORDER BY name");
             $checkQuery->bindValue(":type_core", "Neucore");
             $checkQuery->execute();
             $checkData = $checkQuery->fetchAll();

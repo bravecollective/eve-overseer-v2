@@ -31,7 +31,13 @@
             "core-database-update" => ["Name" => "Core Database Updates", "Types" => [
                 "Access Group Created",
                 "Access Group Updated",
-                "Access Group Deleted"
+                "Access Group Deleted",
+                "Entity Type Created",
+                "Entity Type Updated",
+                "Entity Type Deleted",
+                "Fleet Type Created",
+                "Fleet Type Updated",
+                "Fleet Type Deleted"
             ]],
         ];
 
