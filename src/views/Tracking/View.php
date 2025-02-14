@@ -8,7 +8,6 @@
             ?>
             
             <div class="text-light">
-                <h2 class="mt-3">Fleet Tracking</h2>
                 <ul class="nav nav-tabs mt-3" id="fleet-tabs-control" role="tablist">
                     <li class="nav-item" role="presentation" id="my-fleet-button">
                         <button class="nav-link active" id="my-fleet-tab" data-bs-toggle="tab" data-bs-target="#my-fleet" type="button" role="tab" aria-controls="my-fleet" aria-selected="true">My Fleet</button>

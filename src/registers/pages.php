@@ -60,7 +60,7 @@
         useController: true,
         useAPI: true,
         loginRequired: true, 
-        accessRoles: ["View Fleet Stats"]
+        accessRoles: ["FC", "View Fleet Stats"]
     );
 
     $this->registerPage(

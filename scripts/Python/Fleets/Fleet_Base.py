@@ -460,6 +460,19 @@ class Fleet:
                     str(names_call["Data"])
                 )
             
+        if entries:
+
+            cleanup_cursor = self.database_connection.cursor(buffered=True)
+
+            cleanup_statement = """
+                DELETE FROM useraccounts
+                WHERE (useraccounts.accountid, useraccounts.accounttype) NOT IN
+                    (SELECT DISTINCT userlinks.accountid, userlinks.accounttype FROM userlinks)
+            """
+            cleanup_cursor.execute(cleanup_statement)
+
+            cleanup_cursor.close()
+            
         non_tracked_characters = list(set(entries) - set(linked_characters))
         if non_tracked_characters:
 

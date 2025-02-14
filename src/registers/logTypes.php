@@ -49,6 +49,14 @@
     );
 
     $siteLogger->register(
+        "corp-trackers", 
+        "Corp Trackers", 
+        "Added Corp Tracker",
+        "Removed Corp Tracker",
+        "Updated Corp Members"
+    );
+
+    $siteLogger->register(
         "checker_errors", 
         "Checker Errors", 
         "Checker Fleet Error", 

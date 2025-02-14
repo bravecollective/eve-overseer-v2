@@ -282,6 +282,12 @@
                                         $this->loginSuccess($accessCharacterID);
 
                                     }
+                                    elseif ($loginData["Type"] === "Corp_Tracking") {
+
+                                        self::addCorpTrackingCharacter($accessCharacterID, $accessToken);
+                                        self::loginSuccess($accessCharacterID);
+
+                                    }
                                     else {
 
                                         self::loginSuccess($accessCharacterID);
@@ -428,6 +434,150 @@
                 throw new \Exception("Failed to query database while trying to refresh a token.", 101);
 
             }
+
+        }
+
+        private function addCorpTrackingCharacter($characterID, $accessToken) {
+
+            $authenticatedESIHandler = new \Ridley\Objects\ESI\Handler($this->authorizationConnection, $accessToken);
+            $targetCorporation = null;
+            $targetAlliance = null;
+            $recheckTime = time() + 86400;
+
+            $affiliationsCall = $authenticatedESIHandler->call(endpoint: "/characters/affiliation/", characters: [$characterID], retries: 1);
+            if ($affiliationsCall["Success"]) {
+                                
+                foreach ($affiliationsCall["Data"] as $eachCharacter) {
+
+                    $targetCorporation = (int)$eachCharacter["corporation_id"];
+                    if (isset($eachCharacter["alliance_id"])) {
+                        $targetAlliance = (int)$eachCharacter["alliance_id"];
+                    }
+
+                }
+                
+            }
+            else {
+
+                throw new \Exception("Affiliations call failed while trying to add or update a corporation tracking character.", 201);
+                                
+            }
+
+            if (is_null($targetCorporation) or ($targetCorporation >= 1000000 and $targetCorporation <= 2000000)) {
+
+                throw new \Exception("Attempted to add a corporation tracking character with an NPC or invalid corporation.", 202);
+
+            }
+
+            $memberList = [];
+
+            $membersCall = $authenticatedESIHandler->call(endpoint: "/corporations/{corporation_id}/members/", corporation_id: $targetCorporation, retries: 1);
+            if ($membersCall["Success"] and !empty($membersCall["Data"])) {
+                $memberList = $membersCall["Data"];
+            }
+            else {
+
+                throw new \Exception("Members call failed while trying to add or update a corporation tracking character.", 203);
+                                
+            }
+
+            $memberData = [];
+
+            foreach (array_chunk($memberList, 995) as $subLists) {
+
+                $namesCall = $authenticatedESIHandler->call(endpoint: "/universe/names/", ids: $subLists, retries: 1);
+    
+                if ($namesCall["Success"]) {
+    
+                    foreach ($namesCall["Data"] as $each) {
+    
+                        if ($each["category"] === "character" and in_array($each["id"], $memberList)) {
+    
+                            $memberData[] = [
+                                "ID" => $each["id"],
+                                "Name" => $each["name"]
+                            ];
+    
+                        }
+    
+                    }
+    
+                }
+                else {
+    
+                    throw new \Exception("Names call failed while trying to add or update a corporation tracking character.", 204);
+    
+                }
+
+            }
+
+            $insertCharacter = $this->authorizationConnection->prepare("REPLACE INTO corptrackers (corporationid, allianceid, characterid, recheck) VALUES (:corporationid, :allianceid, :characterid, :recheck)");
+            $insertCharacter->bindParam(":corporationid", $targetCorporation);
+            $insertCharacter->bindParam(":allianceid", $targetAlliance);
+            $insertCharacter->bindParam(":characterid", $characterID);
+            $insertCharacter->bindParam(":recheck", $recheckTime);
+            $insertCharacter->execute();
+
+            //Doing our first round of imports
+            $corpMemberCleanup = $this->authorizationConnection->prepare("DELETE FROM corpmembers WHERE corporationid=:corporationid");
+            $corpMemberCleanup->bindParam(":corporationid", $targetCorporation);
+            $corpMemberCleanup->execute();
+
+            $entries = [];
+            $massInsertStatement = "REPLACE INTO corpmembers (characterid, charactername, corporationid) VALUES ";
+
+            foreach (range(1 , count($memberData)) as $eachNum) {
+                $entries[] = "(:characterid_$eachNum, :charactername_$eachNum, :corporationid_$eachNum)";
+            }
+
+            $massInsertStatement .= implode(",", $entries);
+            $insertMembers = $this->authorizationConnection->prepare($massInsertStatement);
+
+            $eachNum = 1;
+            foreach ($memberData as $eachData) {
+
+                $insertMembers->bindValue((":characterid_" . $eachNum), $eachData["ID"]);
+                $insertMembers->bindValue((":charactername_" . $eachNum), $eachData["Name"]);
+                $insertMembers->bindValue((":corporationid_" . $eachNum), $targetCorporation);
+
+                $eachNum++;
+
+            }
+
+            $insertMembers->execute();
+
+            $insertAccounts = $this->authorizationConnection->prepare("
+                INSERT INTO useraccounts (accountid, accounttype, accountname)
+                    (
+                        SELECT corpmembers.characterid, 'Character', corpmembers.charactername 
+                        FROM corpmembers
+                        WHERE 
+                            corpmembers.corporationid = :corporationid
+                            AND corpmembers.characterid NOT IN (
+                                SELECT DISTINCT userlinks.characterid FROM userlinks
+                            )
+                    )
+            ");
+            $insertAccounts->bindValue(":corporationid", $targetCorporation);
+            $insertAccounts->execute();
+
+            $insertLinks = $this->authorizationConnection->prepare("
+                INSERT INTO userlinks (characterid, accountid, accounttype)
+                    (
+                        SELECT corpmembers.characterid, corpmembers.characterid, 'Character' 
+                        FROM corpmembers
+                        WHERE 
+                            corpmembers.corporationid = :corporationid
+                            AND corpmembers.characterid NOT IN (
+                                SELECT DISTINCT userlinks.characterid FROM userlinks
+                            )
+                    )
+            ");
+            $insertLinks->bindValue(":corporationid", $targetCorporation);
+            $insertLinks->execute();
+
+            $logString = ("Corporation ID: " . $targetCorporation . " \nCharacter ID: " . $characterID . " \nMembers: " . count($entries));
+            $this->authorizationLogger->make_log_entry("Added Corp Tracker", "Authorization Handler", "Unknown Actor", $logString);
 
         }
 

@@ -17,6 +17,17 @@
 
         }
 
+        protected function corporation_members(array $arguments) {
+
+            return $this->makeRequest(
+                endpoint: "/corporations/{corporation_id}/members/",
+                url: ($this->esiURL . "latest/corporations/" . $arguments["corporation_id"] . "/members/?datasource=tranquility"),
+                accessToken: $this->accessToken,
+                retries: (isset($arguments["retries"]) ? $arguments["retries"] : 0)
+            );
+
+        }
+
         protected function authenticated_search(array $arguments) {
 
             $categories = implode(",", $arguments["categories"]);

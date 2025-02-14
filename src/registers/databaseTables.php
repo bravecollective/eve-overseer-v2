@@ -75,6 +75,21 @@
     );
 
     $siteDatabase->register(
+        "corptrackers",
+        ["Name" => "corporationid", "Type" => "BIGINT", "Special" => "primary key"],
+        ["Name" => "allianceid", "Type" => "BIGINT"],
+        ["Name" => "characterid", "Type" => "BIGINT"],
+        ["Name" => "recheck", "Type" => "BIGINT"]
+    );
+
+    $siteDatabase->register(
+        "corpmembers",
+        ["Name" => "characterid", "Type" => "BIGINT", "Special" => "primary key"],
+        ["Name" => "charactername", "Type" => "TEXT"],
+        ["Name" => "corporationid", "Type" => "BIGINT"]
+    );
+
+    $siteDatabase->register(
         "fleets",
         ["Name" => "id", "Type" => "BIGINT", "Special" => "primary key"],
         ["Name" => "name", "Type" => "TEXT"],
