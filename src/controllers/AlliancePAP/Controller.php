@@ -298,7 +298,7 @@
                 
                 $filterDetails["Request"] .= (
                     $this->generateWherePrefix($filterDetails["Request"]) 
-                    . "corptrackers.corporationid = :corporationid)"
+                    . "corptrackers.corporationid = :corporationid"
                 );
                 
                 $filterDetails["Variables"][":corporationid"] = ["Value" => $_POST["corporation_condition"], "Type" => \PDO::PARAM_INT];
@@ -310,7 +310,7 @@
                 
                 $filterDetails["Request"] .= (
                     $this->generateWherePrefix($filterDetails["Request"]) 
-                    . "corptrackers.allianceid = :allianceid)"
+                    . "corptrackers.allianceid = :allianceid"
                 );
                 
                 $filterDetails["Variables"][":allianceid"] = ["Value" => $_POST["alliance_condition"], "Type" => \PDO::PARAM_INT];
