@@ -111,6 +111,7 @@
             $authenticatedESIHandler = new \Ridley\Objects\ESI\Handler($this->databaseConnection, $accessToken);
             $currentCorporation = null;
             $currentAlliance = null;
+            $idsToCheck = [];
             $recheckTime = time() + 86400;
 
             $affiliationsCall = $authenticatedESIHandler->call(endpoint: "/characters/affiliation/", characters: [$characterID], retries: 1);
@@ -119,8 +120,10 @@
                 foreach ($affiliationsCall["Data"] as $eachCharacter) {
 
                     $currentCorporation = (int)$eachCharacter["corporation_id"];
+                    $idsToCheck[] = (int)$eachCharacter["corporation_id"];
                     if (isset($eachCharacter["alliance_id"])) {
                         $currentAlliance = (int)$eachCharacter["alliance_id"];
+                        $idsToCheck[] = (int)$eachCharacter["alliance_id"];
                     }
 
                 }
@@ -156,9 +159,12 @@
                                 
             }
 
+            $currentCorporationName = null;
+            $currentAllianceName = null;
+            $idsToCheck = array_merge($idsToCheck, $memberList);
             $memberData = [];
 
-            foreach (array_chunk($memberList, 995) as $subLists) {
+            foreach (array_chunk($idsToCheck, 995) as $subLists) {
 
                 $namesCall = $authenticatedESIHandler->call(endpoint: "/universe/names/", ids: $subLists, retries: 1);
     
@@ -174,7 +180,17 @@
                             ];
     
                         }
-    
+                        elseif ($each["category"] === "corporation" and $each["id"] == $currentCorporation) {
+
+                            $currentCorporationName = $each["name"];
+
+                        }
+                        elseif ($each["category"] === "alliance" and $each["id"] == $currentAlliance) {
+
+                            $currentAllianceName = $each["name"];
+                            
+                        }
+
                     }
     
                 }
@@ -188,9 +204,11 @@
 
             }
 
-            $updateTracker = $this->databaseConnection->prepare("UPDATE corptrackers SET recheck=:recheck, allianceid=:allianceid WHERE corporationid=:corporationid");
+            $updateTracker = $this->databaseConnection->prepare("UPDATE corptrackers SET recheck=:recheck, allianceid=:allianceid, corporationname=:corporationname, alliancename=:alliancename WHERE corporationid=:corporationid");
             $updateTracker->bindParam(":recheck", $recheckTime);
             $updateTracker->bindParam(":allianceid", $currentAlliance);
+            $updateTracker->bindParam(":corporationname", $currentCorporationName);
+            $updateTracker->bindParam(":alliancename", $currentAllianceName);
             $updateTracker->bindParam(":corporationid", $corporationID);
             $updateTracker->execute();
 

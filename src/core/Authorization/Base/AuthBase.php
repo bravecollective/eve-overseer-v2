@@ -442,6 +442,7 @@
             $authenticatedESIHandler = new \Ridley\Objects\ESI\Handler($this->authorizationConnection, $accessToken);
             $targetCorporation = null;
             $targetAlliance = null;
+            $idsToCheck = [];
             $recheckTime = time() + 86400;
 
             $affiliationsCall = $authenticatedESIHandler->call(endpoint: "/characters/affiliation/", characters: [$characterID], retries: 1);
@@ -450,8 +451,10 @@
                 foreach ($affiliationsCall["Data"] as $eachCharacter) {
 
                     $targetCorporation = (int)$eachCharacter["corporation_id"];
+                    $idsToCheck[] = (int)$eachCharacter["corporation_id"];
                     if (isset($eachCharacter["alliance_id"])) {
                         $targetAlliance = (int)$eachCharacter["alliance_id"];
+                        $idsToCheck[] = (int)$eachCharacter["alliance_id"];
                     }
 
                 }
@@ -481,9 +484,12 @@
                                 
             }
 
+            $targetCorporationName = null;
+            $targetAllianceName = null;
+            $idsToCheck = array_merge($idsToCheck, $memberList);
             $memberData = [];
 
-            foreach (array_chunk($memberList, 995) as $subLists) {
+            foreach (array_chunk($idsToCheck, 995) as $subLists) {
 
                 $namesCall = $authenticatedESIHandler->call(endpoint: "/universe/names/", ids: $subLists, retries: 1);
     
@@ -499,7 +505,17 @@
                             ];
     
                         }
-    
+                        elseif ($each["category"] === "corporation" and $each["id"] == $targetCorporation) {
+
+                            $targetCorporationName = $each["name"];
+
+                        }
+                        elseif ($each["category"] === "alliance" and $each["id"] == $targetAlliance) {
+
+                            $targetAllianceName = $each["name"];
+                            
+                        }
+
                     }
     
                 }
@@ -511,9 +527,11 @@
 
             }
 
-            $insertCharacter = $this->authorizationConnection->prepare("REPLACE INTO corptrackers (corporationid, allianceid, characterid, recheck) VALUES (:corporationid, :allianceid, :characterid, :recheck)");
+            $insertCharacter = $this->authorizationConnection->prepare("REPLACE INTO corptrackers (corporationid, corporationname, allianceid, alliancename, characterid, recheck) VALUES (:corporationid, :corporationname, :allianceid, :alliancename, :characterid, :recheck)");
             $insertCharacter->bindParam(":corporationid", $targetCorporation);
+            $insertCharacter->bindParam(":corporationname", $targetCorporationName);
             $insertCharacter->bindParam(":allianceid", $targetAlliance);
+            $insertCharacter->bindParam(":alliancename", $targetAllianceName);
             $insertCharacter->bindParam(":characterid", $characterID);
             $insertCharacter->bindParam(":recheck", $recheckTime);
             $insertCharacter->execute();

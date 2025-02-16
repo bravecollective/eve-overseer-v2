@@ -77,7 +77,9 @@
     $siteDatabase->register(
         "corptrackers",
         ["Name" => "corporationid", "Type" => "BIGINT", "Special" => "primary key"],
+        ["Name" => "corporationname", "Type" => "TEXT"],
         ["Name" => "allianceid", "Type" => "BIGINT"],
+        ["Name" => "alliancename", "Type" => "TEXT"],
         ["Name" => "characterid", "Type" => "BIGINT"],
         ["Name" => "recheck", "Type" => "BIGINT"]
     );

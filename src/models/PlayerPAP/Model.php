@@ -184,11 +184,13 @@
                     SUM(CASE
                         WHEN fleets.id IS NOT NULL AND " . $recencyConditions["Request"] . "
                         THEN IFNULL((fleetmembers.endtime - fleetmembers.starttime), 0)
+                        ELSE 0
                     END) AS recent_fleets_time,
                     COUNT(DISTINCT fleets.id) AS total_fleets_count,
                     SUM(CASE
                         WHEN fleets.id IS NOT NULL
                         THEN IFNULL((fleetmembers.endtime - fleetmembers.starttime), 0)
+                        ELSE 0
                     END) AS total_fleets_time,
                     COUNT(DISTINCT (CASE
                         WHEN fleets.commanderid = fleetmembers.characterid AND " . $recencyConditions["Request"] . "
@@ -197,6 +199,7 @@
                     SUM(CASE
                         WHEN fleets.commanderid = fleetmembers.characterid AND " . $recencyConditions["Request"] . "
                         THEN IFNULL((fleetmembers.endtime - fleetmembers.starttime), 0)
+                        ELSE 0
                     END) AS recent_runs_time,
                     COUNT(DISTINCT (CASE
                         WHEN fleets.commanderid = fleetmembers.characterid
@@ -205,12 +208,14 @@
                     SUM(CASE
                         WHEN fleets.commanderid = fleetmembers.characterid
                         THEN IFNULL((fleetmembers.endtime - fleetmembers.starttime), 0)
+                        ELSE 0
                     END) AS total_runs_time,
                     MAX(CASE
                         WHEN fleets.id IS NOT NULL
                         THEN IFNULL((fleetmembers.endtime / 1000), 0)
+                        ELSE 0
                     END) AS last_active
-                " . $tables . " GROUP BY useraccounts.accountid " . $toHaving["Request"] . " " . $toOrder . ") AS subquery
+                " . $tables . " GROUP BY useraccounts.accountid, useraccounts.accounttype " . $toHaving["Request"] . " " . $toOrder . ") AS subquery
             ";
             
             $countQuery = $this->databaseConnection->prepare($queryText);
@@ -274,11 +279,13 @@
                     SUM(CASE
                         WHEN fleets.id IS NOT NULL AND " . $recencyConditions["Request"] . "
                         THEN IFNULL((fleetmembers.endtime - fleetmembers.starttime), 0)
+                        ELSE 0
                     END) AS recent_fleets_time,
                     COUNT(DISTINCT fleets.id) AS total_fleets_count,
                     SUM(CASE
                         WHEN fleets.id IS NOT NULL
                         THEN IFNULL((fleetmembers.endtime - fleetmembers.starttime), 0)
+                        ELSE 0
                     END) AS total_fleets_time,
                     COUNT(DISTINCT (CASE
                         WHEN fleets.commanderid = fleetmembers.characterid AND " . $recencyConditions["Request"] . "
@@ -287,6 +294,7 @@
                     SUM(CASE
                         WHEN fleets.commanderid = fleetmembers.characterid AND " . $recencyConditions["Request"] . "
                         THEN IFNULL((fleetmembers.endtime - fleetmembers.starttime), 0)
+                        ELSE 0
                     END) AS recent_runs_time,
                     COUNT(DISTINCT (CASE
                         WHEN fleets.commanderid = fleetmembers.characterid
@@ -295,12 +303,14 @@
                     SUM(CASE
                         WHEN fleets.commanderid = fleetmembers.characterid
                         THEN IFNULL((fleetmembers.endtime - fleetmembers.starttime), 0)
+                        ELSE 0
                     END) AS total_runs_time,
                     MAX(CASE
                         WHEN fleets.id IS NOT NULL
                         THEN IFNULL((fleetmembers.endtime / 1000), 0)
+                        ELSE 0
                     END) AS last_active
-                " . $tables . " GROUP BY useraccounts.accountid " . $toHaving["Request"] . " " . $toOrder . " LIMIT 100 OFFSET :offset 
+                " . $tables . " GROUP BY useraccounts.accountid, useraccounts.accounttype " . $toHaving["Request"] . " " . $toOrder . " LIMIT 100 OFFSET :offset 
             ";
             
             $papQuery = $this->databaseConnection->prepare($queryText);

@@ -326,7 +326,6 @@
         
         protected $model;
         protected $controller;
-        protected $pageList;
         
         public function __construct(
             private \Ridley\Core\Dependencies\DependencyManager $dependencies
@@ -334,7 +333,6 @@
             
             $this->model = $this->dependencies->get("Model");
             $this->controller = $this->dependencies->get("Controller");
-            $this->pageList = $this->dependencies->get("Page Names");
             
         }
         
