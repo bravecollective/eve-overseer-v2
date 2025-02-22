@@ -5,24 +5,40 @@
     class Api implements \Ridley\Interfaces\Api {
 
         private $databaseConnection;
-        private $configVariables;
         private $characterData;
-        private $coreGroups;
 
         public function __construct(
             private \Ridley\Core\Dependencies\DependencyManager $dependencies
         ) {
 
             $this->databaseConnection = $this->dependencies->get("Database");
-            $this->configVariables = $this->dependencies->get("Configuration Variables");
             $this->characterData = $this->dependencies->get("Character Stats");
-            $this->coreGroups = $this->dependencies->get("Core Groups");
 
             if (isset($_POST["Action"])) {
 
-                if ($_POST["Action"] == "Action" and isset($_POST["ID"])) {
+                if ($_POST["Action"] == "Get_Ship_Classes") {
 
+                    $this->getClassBreakdown();
+                    
+                }
+                elseif ($_POST["Action"] == "Get_Ship_Types") {
 
+                    $this->getShipBreakdown();
+                    
+                }
+                elseif ($_POST["Action"] == "Get_Timezones") {
+
+                    $this->getTimezoneBreakdown();
+                    
+                }
+                elseif ($_POST["Action"] == "Get_Fleet_Types") {
+
+                    $this->getTypeBreakdown();
+                    
+                }
+                elseif ($_POST["Action"] == "Get_Fleet_Roles") {
+
+                    $this->getRoleBreakdown();
                     
                 }
                 else {
@@ -44,15 +60,31 @@
 
         private function getTypeBreakdown() {
 
+            $returnData = [
+                "Counts" => [
+                    "Labels" => [],
+                    "Data" => []
+                ],
+                "Times" => [
+                    "Labels" => [],
+                    "Data" => []
+                ]
+            ];
+
             $filterRequest = $this->getFilterRequest("fleetmembers.endtime IS NOT NULL");
 
             $typeBreakdownQuery = $this->databaseConnection->prepare("
-                SELECT fleettypes.name AS name, fleettypes.id AS id, COUNT(DISTINCT fleets.id) AS number_attended, (SUM(fleetmembers.endtime) - SUM(fleetmembers.starttime)) AS milliseconds_attended
-                FROM fleets
+                SELECT 
+                    fleettypes.id AS id, 
+                    fleettypes.name AS name, 
+                    COUNT(DISTINCT fleets.id) AS number_attended, 
+                    (SUM(fleetmembers.endtime) - SUM(fleetmembers.starttime))/1000/3600 AS hours_attended
+                FROM fleetmembers
+                LEFT JOIN fleets ON fleetmembers.fleetid = fleets.id
                 LEFT JOIN fleettypes ON fleettypes.id = fleets.type
-                LEFT JOIN fleetmembers ON fleetmembers.fleetid = fleets.id
                 " . $filterRequest["Request"] . "
                 GROUP BY fleettypes.id
+                ORDER BY fleettypes.name
             ");
 
             foreach ($filterRequest["Variables"] as $eachVariable => $eachValue) {
@@ -62,22 +94,48 @@
             }
 
             $typeBreakdownQuery->execute();
-            $typeData = $typeBreakdownQuery->fetchAll(\PDO::FETCH_ASSOC);
+            while ($incomingTypes = $typeBreakdownQuery->fetch(\PDO::FETCH_ASSOC)) {
+
+                $returnData["Counts"]["Labels"][] = htmlspecialchars($incomingTypes["name"]);
+                $returnData["Counts"]["Data"][] = $incomingTypes["number_attended"];
+                $returnData["Times"]["Labels"][] = htmlspecialchars($incomingTypes["name"]);
+                $returnData["Times"]["Data"][] = $incomingTypes["hours_attended"];
+
+            }
             
-            echo json_encode($typeData);
+            if (empty($returnData["Counts"]["Labels"])) {
+                header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+            }
+
+            echo json_encode($returnData);
 
         }
 
         private function getRoleBreakdown() {
 
-            $filterRequest = $this->getFilterRequest("fleetmembers.endtime IS NOT NULL");
+            $returnData = [
+                "Counts" => [
+                    "Labels" => [],
+                    "Data" => []
+                ],
+                "Times" => [
+                    "Labels" => [],
+                    "Data" => []
+                ]
+            ];
+
+            $filterRequest = $this->getFilterRequest("fleetmembers.endtime IS NOT NULL AND fleetmembers.role != 'squad_member'");
 
             $roleBreakdownQuery = $this->databaseConnection->prepare("
-                SELECT fleetmembers.role AS role, COUNT(DISTINCT fleets.id) AS number_attended, (SUM(fleetmembers.endtime) - SUM(fleetmembers.starttime)) AS milliseconds_attended
-                FROM fleets
-                LEFT JOIN fleetmembers ON fleetmembers.fleetid = fleets.id
+                SELECT 
+                    fleetmembers.role AS role, 
+                    COUNT(DISTINCT fleets.id) AS number_attended, 
+                    (SUM(fleetmembers.endtime) - SUM(fleetmembers.starttime))/1000/3600 AS hours_attended
+                FROM fleetmembers
+                LEFT JOIN fleets ON fleetmembers.fleetid = fleets.id
                 " . $filterRequest["Request"] . "
                 GROUP BY fleetmembers.role
+                ORDER BY FIELD('fleet_commander', 'wing_commander', 'squad_commander')
             ");
 
             foreach ($filterRequest["Variables"] as $eachVariable => $eachValue) {
@@ -87,32 +145,56 @@
             }
 
             $roleBreakdownQuery->execute();
-            $roleData = $roleBreakdownQuery->fetchAll(\PDO::FETCH_ASSOC);
+            while ($incomingRoles = $roleBreakdownQuery->fetch(\PDO::FETCH_ASSOC)) {
+
+                $returnData["Counts"]["Labels"][] = htmlspecialchars(ucwords(str_replace("_", " ", $incomingRoles["role"])));
+                $returnData["Counts"]["Data"][] = $incomingRoles["number_attended"];
+                $returnData["Times"]["Labels"][] = htmlspecialchars(ucwords(str_replace("_", " ", $incomingRoles["role"])));
+                $returnData["Times"]["Data"][] = $incomingRoles["hours_attended"];
+
+            }
+
+            if (empty($returnData["Counts"]["Labels"])) {
+                header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+            }
             
-            echo json_encode($roleData);
+            echo json_encode($returnData);
 
         }
 
         private function getTimezoneBreakdown() {
+
+            $returnData = [
+                "Counts" => [
+                    "Labels" => [],
+                    "Data" => []
+                ],
+                "Times" => [
+                    "Labels" => [],
+                    "Data" => []
+                ]
+            ];
 
             $filterRequest = $this->getFilterRequest("fleetmembers.endtime IS NOT NULL");
 
             //This might need to be optimized
             $timezoneBreakdownQuery = $this->databaseConnection->prepare("
                 SELECT 
-                CASE 
-                    WHEN CAST(DATE_FORMAT(FROM_UNIXTIME(fleetmembers.starttime/1000), '%k') AS UNSIGNED) BETWEEN 0 AND 4 
-                        OR CAST(DATE_FORMAT(FROM_UNIXTIME(fleetmembers.starttime/1000), '%k') AS UNSIGNED) BETWEEN 21 AND 23 THEN 'USTZ'
-                    WHEN CAST(DATE_FORMAT(FROM_UNIXTIME(fleetmembers.starttime/1000), '%k') AS UNSIGNED) BETWEEN 5 AND 12 THEN 'AUTZ'
-                    WHEN CAST(DATE_FORMAT(FROM_UNIXTIME(fleetmembers.starttime/1000), '%k') AS UNSIGNED) BETWEEN 12 AND 22 THEN 'EUTZ'
-                    ELSE 'Unknown'
-                END
-                AS timezone,
-                COUNT(DISTINCT fleets.id) AS number_attended, (SUM(fleetmembers.endtime) - SUM(fleetmembers.starttime)) AS milliseconds_attended
-                FROM fleets
-                LEFT JOIN fleetmembers ON fleetmembers.fleetid = fleets.id
+                    CASE 
+                        WHEN CAST(DATE_FORMAT(FROM_UNIXTIME(fleetmembers.starttime/1000), '%k') AS UNSIGNED) BETWEEN 0 AND 4 
+                            OR CAST(DATE_FORMAT(FROM_UNIXTIME(fleetmembers.starttime/1000), '%k') AS UNSIGNED) BETWEEN 21 AND 23 THEN 'USTZ'
+                        WHEN CAST(DATE_FORMAT(FROM_UNIXTIME(fleetmembers.starttime/1000), '%k') AS UNSIGNED) BETWEEN 5 AND 12 THEN 'AUTZ'
+                        WHEN CAST(DATE_FORMAT(FROM_UNIXTIME(fleetmembers.starttime/1000), '%k') AS UNSIGNED) BETWEEN 12 AND 22 THEN 'EUTZ'
+                        ELSE 'Unknown'
+                    END
+                    AS timezone,
+                    COUNT(DISTINCT fleets.id) AS number_attended, 
+                    (SUM(fleetmembers.endtime) - SUM(fleetmembers.starttime))/1000/3600 AS hours_attended
+                FROM fleetmembers
+                LEFT JOIN fleets ON fleetmembers.fleetid = fleets.id
                 " . $filterRequest["Request"] . "
                 GROUP BY timezone
+                ORDER BY FIELD('EUTZ', 'USTZ', 'AUTZ')
             ");
 
             foreach ($filterRequest["Variables"] as $eachVariable => $eachValue) {
@@ -122,22 +204,48 @@
             }
 
             $timezoneBreakdownQuery->execute();
-            $timezoneData = $timezoneBreakdownQuery->fetchAll(\PDO::FETCH_ASSOC);
+            while ($incomingTimezones = $timezoneBreakdownQuery->fetch(\PDO::FETCH_ASSOC)) {
+
+                $returnData["Counts"]["Labels"][] = htmlspecialchars($incomingTimezones["timezone"]);
+                $returnData["Counts"]["Data"][] = $incomingTimezones["number_attended"];
+                $returnData["Times"]["Labels"][] = htmlspecialchars($incomingTimezones["timezone"]);
+                $returnData["Times"]["Data"][] = $incomingTimezones["hours_attended"];
+
+            }
+
+            if (empty($returnData["Counts"]["Labels"])) {
+                header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+            }
             
-            echo json_encode($timezoneData);
+            echo json_encode($returnData);
 
         }
 
         private function getClassBreakdown() {
 
+            $returnData = [
+                "Counts" => [
+                    "Labels" => [],
+                    "Data" => []
+                ],
+                "Times" => [
+                    "Labels" => [],
+                    "Data" => []
+                ]
+            ];
+
             $filterRequest = $this->getFilterRequest("fleetships.endtime IS NOT NULL");
 
             $classBreakdownQuery = $this->databaseConnection->prepare("
-                SELECT evegroups.id AS id, evegroups.name AS name, COUNT(DISTINCT fleets.id) AS number_attended, (SUM(fleetships.endtime) - SUM(fleetships.starttime)) AS milliseconds_attended
-                FROM fleets
-                LEFT JOIN fleetships ON fleetships.fleetid = fleets.id
+                SELECT 
+                    evegroups.id AS id, 
+                    evegroups.name AS name, 
+                    COUNT(DISTINCT fleetships.fleetid) AS number_attended, 
+                    (SUM(fleetships.endtime) - SUM(fleetships.starttime))/1000/3600 AS hours_attended
+                FROM fleetships
                 LEFT JOIN evetypes ON evetypes.id = fleetships.shipid
                 LEFT JOIN evegroups ON evegroups.id = evetypes.groupid
+                LEFT JOIN fleets ON fleetships.fleetid = fleets.id
                 " . $filterRequest["Request"] . "
                 GROUP BY evegroups.id
             ");
@@ -149,20 +257,45 @@
             }
 
             $classBreakdownQuery->execute();
-            $classData = $classBreakdownQuery->fetchAll(\PDO::FETCH_ASSOC);
+            while ($incomingClasses = $classBreakdownQuery->fetch(\PDO::FETCH_ASSOC)) {
+
+                $returnData["Counts"]["Labels"][] = htmlspecialchars($incomingClasses["name"]);
+                $returnData["Counts"]["Data"][] = $incomingClasses["number_attended"];
+                $returnData["Times"]["Labels"][] = htmlspecialchars($incomingClasses["name"]);
+                $returnData["Times"]["Data"][] = $incomingClasses["hours_attended"];
+
+            }
+
+            if (empty($returnData["Counts"]["Labels"])) {
+                header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+            }
             
-            echo json_encode($classData);
+            echo json_encode($returnData);
 
         }
 
         private function getShipBreakdown() {
 
+            $returnData = [
+                "Counts" => [
+                    "Labels" => [],
+                    "Data" => []
+                ],
+                "Times" => [
+                    "Labels" => [],
+                    "Data" => []
+                ]
+            ];
+
             $filterRequest = $this->getFilterRequest("fleetships.endtime IS NOT NULL");
 
             $shipBreakdownQuery = $this->databaseConnection->prepare("
-                SELECT fleetships.shipid AS id, COUNT(DISTINCT fleets.id) AS number_attended, (SUM(fleetships.endtime) - SUM(fleetships.starttime)) AS milliseconds_attended
-                FROM fleets
-                LEFT JOIN fleetships ON fleetships.fleetid = fleets.id
+                SELECT 
+                    fleetships.shipid AS id, 
+                    COUNT(DISTINCT fleetships.fleetid) AS number_attended, 
+                    (SUM(fleetships.endtime) - SUM(fleetships.starttime))/1000/3600 AS hours_attended
+                FROM fleetships 
+                LEFT JOIN fleets ON fleetships.fleetid = fleets.id
                 " . $filterRequest["Request"] . "
                 GROUP BY fleetships.shipid
             ");
@@ -174,59 +307,91 @@
             }
 
             $shipBreakdownQuery->execute();
-            $typeData = $shipBreakdownQuery->fetchAll(\PDO::FETCH_ASSOC);
 
-            //NOTE: We need to parse these IDs into names!
+            $idsToCheck = [];
+            $originalData = [];
+            while ($incomingShips = $shipBreakdownQuery->fetch(\PDO::FETCH_ASSOC)) {
+
+                if (!in_array($incomingShips["id"], $idsToCheck)) {
+                    $idsToCheck[] = $incomingShips["id"];
+                }
+
+                $originalData[$incomingShips["id"]] = [
+                    "Count" => $incomingShips["number_attended"],
+                    "Time" => $incomingShips["hours_attended"]
+                ];
+
+            }
+
+            $knownNames = [];
+            if (!empty($idsToCheck)) {
+                $esiHandler = new \Ridley\Objects\ESI\Handler($this->databaseConnection);
+
+                $namesCall = $esiHandler->call(endpoint: "/universe/names/", ids: $idsToCheck, retries: 1);
+
+                if ($namesCall["Success"]) {
+
+                    foreach ($namesCall["Data"] as $eachID) {
+
+                        if ($eachID["category"] === "inventory_type") {
+    
+                            $knownNames[$eachID["id"]] = $eachID["name"];
+    
+                        }
+
+                    }
+
+                }
+                else {
+                    header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
+                    throw new \Exception("A names call failed while trying to get ship names.", 11001);
+                }
+
+            }
+
+            if (empty($originalData)) {
+                header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+                echo json_encode($returnData);
+                return;
+            }
+
+            foreach ($originalData as $eachID => $eachData) {
+                
+                if (isset($knownNames[$eachID])) {
+                    $returnData["Counts"]["Labels"][] = htmlspecialchars($knownNames[$eachID]);
+                    $returnData["Times"]["Labels"][] = htmlspecialchars($knownNames[$eachID]);
+                }
+                else {
+                    $returnData["Counts"]["Labels"][] = htmlspecialchars("Unknown Ship");
+                    $returnData["Times"]["Labels"][] = htmlspecialchars("Unknown Ship");
+                }
+                $returnData["Counts"]["Data"][] = $eachData["Count"];
+                $returnData["Times"]["Data"][] = $eachData["Time"];
+            }
+
+
+            if (empty($returnData["Counts"]["Labels"])) {
+                header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+            }
             
-            echo json_encode($typeData);
+            echo json_encode($returnData);
 
         }
 
         public function getFleetTypes() {
 
-            $fleetTypes = [];
-
             $checkQuery = $this->databaseConnection->prepare("
-                SELECT fleettypes.id AS id, fleettypes.name AS name, fleettypeaccess.roletype AS roletype, fleettypeaccess.roleid AS roleid
-                FROM fleettypeaccess
-                LEFT JOIN fleettypes
-                ON fleettypeaccess.typeid = fleettypes.id
-                WHERE fleettypeaccess.accesstype = :accesstype
-                ORDER BY name ASC
+                SELECT 
+                    DISTINCT fleettypes.id AS id
+                FROM fleetmembers
+                LEFT JOIN fleets ON fleetmembers.fleetid = fleets.id
+                LEFT JOIN fleettypes ON fleets.type = fleettypes.id
+                WHERE fleetmembers.endtime IS NOT NULL AND fleetmembers.characterid=:characterid
             ");
-            $checkQuery->bindValue(":accesstype", "Command");
+            $checkQuery->bindValue(":characterid", $this->characterData["Character ID"]);
             $checkQuery->execute();
 
-            if ($this->configVariables["Auth Type"] == "Eve") {
-
-                while ($incomingTypes = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
-
-                    if (
-                        ($incomingTypes["roletype"] == "Character" and $incomingTypes["roleid"] == $this->characterData["Character ID"])
-                        or ($incomingTypes["roletype"] == "Corporation" and $incomingTypes["roleid"] == $this->characterData["Corporation ID"])
-                        or ($incomingTypes["roletype"] == "Alliance" and $incomingTypes["roleid"] == $this->characterData["Alliance ID"])
-                    ) {
-                        $fleetTypes[$incomingTypes["id"]] = $incomingTypes["name"];
-                    }
-
-                }
-
-            }
-            elseif ($this->configVariables["Auth Type"] == "Neucore") {
-
-                while ($incomingTypes = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
-
-                    if (
-                        $incomingTypes["roletype"] == "Neucore" and isset($this->coreGroups[$incomingTypes["roleid"]])
-                    ) {
-                        $fleetTypes[$incomingTypes["id"]] = $incomingTypes["name"];
-                    }
-
-                }
-
-            }
-
-            return $fleetTypes;
+            return $checkQuery->fetchAll(\PDO::FETCH_COLUMN);
 
         }
 
@@ -247,6 +412,8 @@
                 $incomingStartTime = strtotime($_POST["date-start"]);
                 
                 if ($incomingStartTime !== false) {
+
+                    $incomingStartTime *= 1000;
                     
                     $filterDetails["Request"] .= " AND fleets.starttime >= :date_start";
                     
@@ -264,6 +431,7 @@
                 if ($incomingEndTime !== false) {
                     
                     $incomingEndTime += 86400;
+                    $incomingEndTime *= 1000;
                 
                     $filterDetails["Request"] .= " AND fleets.endtime <= :date_end";
                     
@@ -271,29 +439,30 @@
                     
                 }
             }
-            
-            //Filter by Fleet Type
-            $typeSubstring = "AND fleets.type IN (";
-            
-            $typeCounter = 0;
-            foreach ($this->getFleetTypes() as $eachID => $eachName) {
-                
-                if (isset($_POST["type-" . $eachID]) and $_POST["type-" . $eachID] === "true") {
 
-                    $typeSubstring .= (":type_" . $typeCounter . ",");
-                    $filterDetails["Variables"][":type_" . $typeCounter] = ["Value" => $eachID, "Type" => \PDO::PARAM_INT];
-                    $typeCounter++;
+            //Filter by Fleets
+            $fleetPlaceholders = [];
+            $fleetCounter = 0;
+            if (isset($_POST["fleet-type"]) and !empty($_POST["fleet-type"])) {
 
+                $knownFleets = $this->getFleetTypes();
+
+                foreach ($_POST["fleet-type"] as $eachID) {
+
+                    if (in_array($eachID, $knownFleets)) {
+                        $fleetPlaceholders[] = (":fleet_" . $fleetCounter);
+                        $filterDetails["Variables"][(":fleet_" . $fleetCounter)] = ["Value" => $eachID, "Type" => \PDO::PARAM_INT];
+                        $fleetCounter++;
+                    }
+                    
                 }
-                
+
             }
-            
-            $typeSubstring = (rtrim($typeSubstring, ",") . ")");
-            
-            if (!str_ends_with($typeSubstring, "()")) {
-                
-                $filterDetails["Request"] .= $typeSubstring;
-                
+
+            if ($fleetCounter > 0) {
+
+                $filterDetails["Request"] .= (" AND fleets.type IN (" . implode(",", $fleetPlaceholders) . ")");
+
             }
             
             return $filterDetails;

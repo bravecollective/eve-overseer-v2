@@ -631,29 +631,31 @@
         public function renderData() {
             ?>
 
-            <div class="row mt-3">
+            <div class="card mt-3" style="color: #41464b; background-color: #e2e3e5;">
+                <div class="card-body p-2">
+                    <div class="row">
 
-                <div class="col-lg-4">
+                        <div class="col-lg-4">
 
-                    <h4><?php echo htmlspecialchars($this->headerData["Fleet Name"]); ?></h4>
-                    <h5 class="text-secondary"><?php echo htmlspecialchars($this->headerData["Fleet Type"]); ?></h5>
+                            <div class="fw-bold"><?php echo htmlspecialchars($this->headerData["Fleet Name"]); ?></div>
+                            <div class="small"><?php echo htmlspecialchars($this->headerData["Fleet Type"]); ?></div>
 
+                        </div>
+                        <div class="col-lg-4 text-center">
+
+                            <div class="fw-bold"><?php echo htmlspecialchars($this->headerData["Commander Name"]); ?></div>
+
+                        </div>
+                        <div class="col-lg-4 text-end">
+
+                            <div class="fw-bold">Fleet Members: <?php echo htmlspecialchars($this->headerData["Fleet Members"]); ?></div>
+                            <div class="small">User Accounts: <?php echo htmlspecialchars($this->headerData["User Accounts"]); ?></div>
+
+                        </div>
+
+                    </div>
                 </div>
-                <div class="col-lg-4 text-center">
-
-                    <h4><?php echo htmlspecialchars($this->headerData["Commander Name"]); ?></h5>
-
-                </div>
-                <div class="col-lg-4 text-end">
-
-                    <h4>Fleet Members: <?php echo htmlspecialchars($this->headerData["Fleet Members"]); ?></h4>
-                    <h5 class="text-secondary">User Accounts: <?php echo htmlspecialchars($this->headerData["User Accounts"]); ?></h5>
-
-                </div>
-
             </div>
-
-            <hr>
 
             <div class="row mt-3">
 
