@@ -53,7 +53,8 @@
         "Corp Trackers", 
         "Added Corp Tracker",
         "Removed Corp Tracker",
-        "Updated Corp Members"
+        "Updated Corp Members",
+        "Corp Tracker Failure"
     );
 
     $siteLogger->register(

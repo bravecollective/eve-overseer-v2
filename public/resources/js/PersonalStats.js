@@ -92,7 +92,7 @@ function createTimezoneChart(incomingData) {
                             },
                             beginAtZero: true,
                             ticks: {
-                                stepSize: 1
+                                precision: 0
                             }
                         }
                     }
@@ -313,7 +313,7 @@ function createFleetRoleChart(incomingData) {
                             },
                             beginAtZero: true,
                             ticks: {
-                                stepSize: 1
+                                precision: 0
                             }
                         }
                     }

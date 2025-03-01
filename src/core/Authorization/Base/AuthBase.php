@@ -462,13 +462,17 @@
             }
             else {
 
-                throw new \Exception("Affiliations call failed while trying to add or update a corporation tracking character.", 201);
+                $logString = ("Corporation ID: " . $targetCorporation . " \nCharacter ID: " . $characterID . " \nReason: Affiliation Call Failed");
+                $this->authorizationLogger->make_log_entry(logType: "Corp Tracker Failure", logDetails: $logString);
+                return;
                                 
             }
 
             if (is_null($targetCorporation) or ($targetCorporation >= 1000000 and $targetCorporation <= 2000000)) {
 
-                throw new \Exception("Attempted to add a corporation tracking character with an NPC or invalid corporation.", 202);
+                $logString = ("Corporation ID: " . $targetCorporation . " \nCharacter ID: " . $characterID . " \nReason: Target Corporation Invalid");
+                $this->authorizationLogger->make_log_entry(logType: "Corp Tracker Failure", logDetails: $logString);
+                return;
 
             }
 
@@ -480,7 +484,9 @@
             }
             else {
 
-                throw new \Exception("Members call failed while trying to add or update a corporation tracking character.", 203);
+                $logString = ("Corporation ID: " . $targetCorporation . " \nCharacter ID: " . $characterID . " \nReason: Members Call Failure");
+                $this->authorizationLogger->make_log_entry(logType: "Corp Tracker Failure", logDetails: $logString);
+                return;
                                 
             }
 
@@ -521,7 +527,9 @@
                 }
                 else {
     
-                    throw new \Exception("Names call failed while trying to add or update a corporation tracking character.", 204);
+                    $logString = ("Corporation ID: " . $targetCorporation . " \nCharacter ID: " . $characterID . " \nReason: Names Call Failure");
+                    $this->authorizationLogger->make_log_entry(logType: "Corp Tracker Failure", logDetails: $logString);
+                    return;
     
                 }
 

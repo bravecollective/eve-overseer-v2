@@ -17,11 +17,11 @@ jQuery(document).ready(function () {
         $("#order_order").val($(this).attr("data-sort-order"));
     });
 
-    $("#pap_minimum").on("change", function () {
+    $("#pap_minimum").on("input", function () {
         $("#pap_number").text($(this).val())
     });
 
-    $("#run_minimum").on("change", function () {
+    $("#run_minimum").on("input", function () {
         $("#run_number").text($(this).val())
     });
 

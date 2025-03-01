@@ -29,6 +29,7 @@
         linkToUse: "home",
         nameToUse: "Homepage",
         codeToUse: "Home",
+        useModel: true,
         inNav: false    //Keep this value false as the navbar branding links back to home already.
     );
     
