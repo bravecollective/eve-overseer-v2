@@ -27,6 +27,13 @@ jQuery(document).ready(function () {
     if (fleet_id != "" && !isNaN(fleet_id)) {
         loadClassBreakdown();
         loadShipBreakdown();
+
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+        
+
     }
     
 });
@@ -104,7 +111,6 @@ function createClassBreakdown(incomingData) {
                         bodySpacing: 0,
                         yAlign: "top",
                         filter: (context) => context.raw > 0,
-                        itemSort: (a, b) => b.raw - a.raw
                     }
                 }
             }
@@ -191,7 +197,6 @@ function createShipBreakdown(incomingData) {
                         bodySpacing: 0,
                         yAlign: "top",
                         filter: (context) => context.raw > 0,
-                        itemSort: (a, b) => b.raw - a.raw
                     }
                 }
             }

@@ -94,6 +94,65 @@
 
                 </div>
 
+                <div class="row">
+
+                    <div class="col-lg-3">
+                        <div class="card mt-4" style="color: #41464b; background-color: #e2e3e5;">
+                            <div class="card-body text-center">
+
+                                <h5 class="card-title">Affiliation Breakdown</h5>
+                                <ul class="list-group rounded-0 mt-3">
+                                    <?php $this->affiliationsTemplate($fleetID); ?>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-9">
+                        <div class="card mt-4" style="color: #41464b; background-color: #e2e3e5;">
+                            <div class="card-body text-center">
+
+                                <h5 class="card-title">Member Breakdown</h5>
+
+                                    <table class="table table-secondary table-hover align-middle text-wrap small mt-2">
+                                        <thead class="p-4">
+                                            <tr class="align-middle">
+                                                <th scope="col" class="text-start" style="width: 15%;">
+                                                    Name
+                                                </th>
+                                                <th scope="col" class="text-start" style="width: 15%;">
+                                                    Corporation
+                                                </th>
+                                                <th scope="col" class="text-start" style="width: 15%;">
+                                                    Alliance
+                                                </th>
+                                                <th scope="col" class="text-end" style="width: 20%;">
+                                                    First Instance
+                                                </th>
+                                                <th scope="col" class="text-end" style="width: 10%;">
+                                                    Total Instances
+                                                </th>
+                                                <th scope="col" class="text-end" style="width: 10%;">
+                                                    Time in Fleet
+                                                </th>
+                                                <th scope="col" class="text-end" style="width: 15%;">
+                                                    Warnings
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+                                            <?php $this->membersTemplate($fleetID); ?>
+
+                                        </tbody>
+                                    </table>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
                 <?php
             }
             else {
@@ -111,8 +170,108 @@
             }
 
         }
+
+        protected function affiliationsTemplate($fleetID) {
+
+            $alliancesAndCorporations = $this->model->getFleetAffiliations($fleetID);
+
+            foreach ($alliancesAndCorporations as $eachAllianceID => $eachAlliance) {
+
+                ?>
+                <li class="mt-1 list-group-item list-group-item-dark fw-bold d-flex justify-content-between align-items-center">
+                    <?php echo htmlspecialchars($eachAlliance["Name"]); ?>
+                    <span class="badge bg-dark"><?php echo htmlspecialchars($eachAlliance["Count"]); ?></span>
+                </li>
+                <?php
+
+                foreach ($eachAlliance["Corporations"] as $eachCorporationID => $eachCorporation) {
+
+                    ?>
+                    <li class="ms-4 list-group-item list-group-item-dark d-flex justify-content-between align-items-center">
+                        <?php echo htmlspecialchars($eachCorporation["Name"]); ?>
+                        <span class="badge bg-dark"><?php echo htmlspecialchars($eachCorporation["Count"]); ?></span>
+                    </li>
+                    <?php
+
+                }
+
+            }
+
+        }
+
+        protected function generateWarnings($memberData) {
+
+            $warningHTML = "";
+
+            if ($memberData["Instances in Command"] > 0) {
+
+                if (($memberData["Time in Command"] / $memberData["Instances in Command"]) < (1000 * 60 * 5)) {
+                    $warningHTML .= '
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="left" title="Possible Fleet Composition Gathering">
+                        <i class="bi bi-sunglasses"></i>
+                    </button> 
+                    ';
+                }
+
+                $warningHTML .= '
+                <button type="button" class="btn btn-info btn-sm" data-bs-toggle="tooltip" data-bs-placement="left" title="Held Command Position">
+                    <i class="bi bi-chevron-double-up"></i>
+                </button> 
+                ';
+            }
+            if ($memberData["Instances in Command"] >= 3) {
+                $warningHTML .= '
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="left" title="High Number of Instances in Command">
+                    <i class="bi bi-chevron-double-up"></i>
+                </button> 
+                ';
+            }
+            if (($memberData["Time in Fleet"] / $memberData["Total Instances"]) < (1000 * 60 * 5)) {
+                $warningHTML .= '
+                <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="tooltip" data-bs-placement="left" title="Low Per-Instance Time in Fleet">
+                    <i class="bi bi-send"></i>
+                </button> 
+                ';
+            }
+            if ($memberData["Total Instances"] >= 5) {
+                $warningHTML .= '
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="left" title="High Number of Joins or Position Changes.">
+                    <i class="bi bi-send-exclamation"></i>
+                </button> 
+                ';
+            }
+
+            return $warningHTML;
+
+        }
+
+        protected function membersTemplate($fleetID) {
+
+            $memberData = $this->model->getFleetMembers($fleetID);
+
+            foreach ($memberData as $eachID => $eachMemberData) {
+
+                $initialDate = date("M d, Y — H:i EVE", (int)($eachMemberData["First Instance"] / 1000));
+                ?>
+                
+                <tr class="member_entry" data-row-id="<?php echo $eachMemberData["ID"]; ?>">
+                    <td class="text-start"><?php echo htmlspecialchars($eachMemberData["Name"] ?? ""); ?></td>
+                    <td class="text-start"><?php echo htmlspecialchars($eachMemberData["Corporation Name"] ?? ""); ?></td>
+                    <td class="text-start"><?php echo htmlspecialchars($eachMemberData["Alliance Name"] ?? ""); ?></td>
+                    <td class="text-end"><?php echo htmlspecialchars($initialDate); ?></td>
+                    <td class="text-end"><?php echo htmlspecialchars($eachMemberData["Total Instances"] ?? ""); ?></td>
+                    <td class="text-end"><?php echo htmlspecialchars($this->formatTime($eachMemberData["Time in Fleet"])); ?></td>
+                    <td class="text-end"><?php echo $this->generateWarnings($eachMemberData); ?></td>
+                </tr>
+                
+                <?php
+            }
+
+        }
         
         protected function mainTemplate() {
+
+            $this->model->getRowCount();
 
             $nameValue = htmlspecialchars($_POST["name_condition"] ?? "");
             $commanderValue = htmlspecialchars($_POST["commander_condition"] ?? "");

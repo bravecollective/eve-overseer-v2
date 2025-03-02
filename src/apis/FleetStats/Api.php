@@ -170,7 +170,6 @@
         private function getClassBreakdown($fleetID) {
 
             $accessRestrictions = $this->generateAccessRestrictions();
-
             $restrictionsQuery = ($accessRestrictions["Enabled"]) ? (" AND " . $accessRestrictions["Request"]) : "";
 
             $checkQuery = $this->databaseConnection->prepare("
@@ -208,7 +207,7 @@
                     INNER JOIN evegroups ON evetypes.groupid = evegroups.id
                     WHERE fleetsnapshots.fleetid = :fleetid
                     GROUP BY fleetsnapshots.timestamp, evegroups.id
-                    ORDER BY fleetsnapshots.timestamp ASC, evegroups.id ASC
+                    ORDER BY fleetsnapshots.timestamp ASC, count DESC
                 ");
     
                 $classBreakdownQuery->bindValue(":fleetid", $fleetID);
@@ -291,7 +290,7 @@
                     INNER JOIN fleetships ON fleetsnapshots.fleetid = fleetships.fleetid
                     WHERE fleetsnapshots.fleetid = :fleetid
                     GROUP BY fleetsnapshots.timestamp, fleetships.shipid
-                    ORDER BY fleetsnapshots.timestamp ASC, fleetships.shipid ASC
+                    ORDER BY fleetsnapshots.timestamp ASC, count DESC
                 ");
     
                 $shipBreakdownQuery->bindValue(":fleetid", $fleetID);
