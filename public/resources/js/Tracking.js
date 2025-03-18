@@ -28,6 +28,22 @@ jQuery(document).ready(function () {
     });
 
     $("#toggle_tracking").click(function () {
+
+        if ($("#fleet_name").val().length < 3) {
+
+            $("#toggle_tracking").removeClass("btn-outline-primary btn-outline-danger btn-outline-warning");
+            $("#toggle_tracking").addClass("btn-outline-danger");
+            $("#toggle_tracking").text("Please Set a Fleet Name");
+            return;
+        }
+
+        if ($("#fleet_type").val() == "") {
+
+            $("#toggle_tracking").removeClass("btn-outline-primary btn-outline-danger btn-outline-warning");
+            $("#toggle_tracking").addClass("btn-outline-danger");
+            $("#toggle_tracking").text("Please Set a Fleet Type");
+            return;
+        }
         
         toggleTracking(
             $("#fleet_name").val(), 
@@ -264,6 +280,9 @@ function toggleTracking(fleet_name, fleet_type, share) {
                     $("#share_key").val(result["Share Key"]);
                     $("#share_container").prop("hidden", false);
                 }
+                else {
+                    $("#share_fleet").prop("checked", false);
+                }
 
                 is_tracking = true;
 
@@ -308,7 +327,17 @@ function getTrackingData() {
             },
             error: function(result) {
 
+                $("#toggle_tracking").removeClass("btn-outline-primary btn-outline-danger btn-outline-warning");
+                $("#toggle_tracking").addClass("btn-outline-primary");
+                $("#toggle_tracking").text("Tracking Stopped - Start Again?");
+                $("#share_key").val("");
+                $("#share_container").prop("hidden", true);
+                $("#fleet_name").prop("disabled", false);
+                $("#fleet_type").prop("disabled", false);
+                $("#share_fleet").prop("disabled", false);
                 $(".fleet-display[data-tab-id='my-fleet']").empty();
+
+                is_tracking = false;
 
             }
         });
@@ -334,7 +363,14 @@ function getTrackingData() {
             },
             error: function(result) {
 
-                $(`.fleet-display[data-share-tab-number='${each_tab}']`).empty()
+                delete shared_fleets[each_tab];
+                $(`.fleet-display[data-share-tab-number='${each_tab}']`).empty();
+                $(`.track-shared[data-share-tab-number='${each_tab}']`).removeClass("btn-outline-primary btn-outline-danger btn-outline-warning");
+                $(`.track-shared[data-share-tab-number='${each_tab}']`).addClass("btn-outline-primary");
+                $(`.track-shared[data-share-tab-number='${each_tab}']`).text("Tracking Stopped - Track Another Fleet?");
+                $(`.track-shared[data-share-tab-number='${each_tab}']`).prop("disabled", false);
+                $(`.share-key-input[data-share-tab-number='${each_tab}']`).prop("disabled", false);
+                $(`#shared-fleet-${each_tab}-tab`).text("Tracking Stopped");
 
             }
         });
@@ -372,6 +408,9 @@ function getInitialFleetStatus() {
                 $("#share_fleet").prop("checked", true);
                 $("#share_key").val(result["Share Key"]);
                 $("#share_container").prop("hidden", false);
+            }
+            else {
+                $("#share_fleet").prop("checked", false);
             }
 
             is_tracking = true;

@@ -57,7 +57,7 @@
                         <div id="pap_spinner" class="spinner-border" hidden></div>
                         <div id="pap_auth" <?php echo $papAuth; ?>>
                             <h5 class="text-light mt-2">Auth Corporation: </h5>
-                            <a href="player_participation/?action=login" class="mt-3">
+                            <a href="/alliance_participation/?action=login" class="mt-3">
                                 <img class="login-button" src="/resources/images/sso_image.png">
                             </a>
                         </div>

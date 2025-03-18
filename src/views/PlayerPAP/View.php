@@ -91,7 +91,7 @@
 
                         <div id="pap_auth" <?php echo $papAuth; ?>>
                             <h5 class="text-light mt-2">Auth for PAP Mode: </h5>
-                            <a href="player_participation/?action=login" class="mt-3">
+                            <a href="/player_participation/?action=login" class="mt-3">
                                 <img class="login-button" src="/resources/images/sso_image.png">
                             </a>
                         </div>

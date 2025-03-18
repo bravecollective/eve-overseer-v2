@@ -165,7 +165,7 @@
                             THEN 1
                             ELSE 0
                         END) AS recheck,
-                        COUNT(corpmembers.corporationid) AS members,
+                        COUNT(DISTINCT corpmembers.characterid) AS members,
                         COUNT(DISTINCT fleets.id) AS total_fleets,
                         COUNT(DISTINCT (CASE
                             WHEN " . $recencyConditions["Request"] . "
@@ -244,7 +244,7 @@
                         THEN 1
                         ELSE 0
                     END) AS recheck,
-                    COUNT(corpmembers.corporationid) AS members,
+                    COUNT(DISTINCT corpmembers.characterid) AS members,
                     COUNT(DISTINCT fleets.id) AS total_fleets,
                     COUNT(DISTINCT (CASE
                         WHEN " . $recencyConditions["Request"] . "

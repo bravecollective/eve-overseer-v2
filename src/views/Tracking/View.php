@@ -30,7 +30,7 @@
                                     </div>
 
                                     <select id="fleet_type" class="form-select mt-3" aria-label="Fleet Type">
-                                        <option selected>Select a Fleet Type</option>
+                                        <option value="" selected>Select a Fleet Type</option>
                                         <?php
 
                                         foreach ($this->model->getFleetTypes() as $eachID => $eachName) {
@@ -45,7 +45,7 @@
                                     </select>
 
                                     <div class="form-check mt-3">
-                                        <input class="form-check-input" type="checkbox" value="true" id="share_fleet">
+                                        <input class="form-check-input" type="checkbox" value="true" id="share_fleet" checked>
                                         <label class="form-check-label" for="share_fleet">Share Fleet</label>
                                     </div>
 
