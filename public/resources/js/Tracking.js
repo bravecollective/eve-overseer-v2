@@ -306,74 +306,86 @@ function toggleTracking(fleet_name, fleet_type, share) {
 
 }
 
+function requestTrackingData() {
+
+    dataObject = {
+        "Action": "Get_Fleet_Data",
+        "Only_With_Commander": $("#only_with_commander:checked").val() ?? false
+    };
+
+    $.ajax({
+        url: "/tracking/?core_action=api",
+        type: "POST",
+        data: dataObject,
+        dataType: "html",
+        success: function(result) {
+            
+            $(".fleet-display[data-tab-id='my-fleet']").html(result);
+            
+        },
+        error: function(result) {
+
+            $("#toggle_tracking").removeClass("btn-outline-primary btn-outline-danger btn-outline-warning");
+            $("#toggle_tracking").addClass("btn-outline-primary");
+            $("#toggle_tracking").text("Tracking Stopped - Start Again?");
+            $("#share_key").val("");
+            $("#share_container").prop("hidden", true);
+            $("#fleet_name").prop("disabled", false);
+            $("#fleet_type").prop("disabled", false);
+            $("#share_fleet").prop("disabled", false);
+            $(".fleet-display[data-tab-id='my-fleet']").empty();
+
+            is_tracking = false;
+
+        }
+    });
+
+}
+
+function requestSharedTrackingData(tab_number) {
+
+    dataObject = {
+        "Action": "Get_Fleet_Data",
+        "Share_Key": shared_fleets[tab_number],
+        "Only_With_Commander": $(`.shared_only_with_commander[data-share-tab-number='${tab_number}']:checked`).val() ?? false
+    };
+
+    $.ajax({
+        url: "/tracking/?core_action=api",
+        type: "POST",
+        data: dataObject,
+        dataType: "html",
+        success: function(result) {
+            
+            $(`.fleet-display[data-share-tab-number='${tab_number}']`).html(result);
+            
+        },
+        error: function(result) {
+
+            delete shared_fleets[tab_number];
+            $(`.fleet-display[data-share-tab-number='${tab_number}']`).empty();
+            $(`.track-shared[data-share-tab-number='${tab_number}']`).removeClass("btn-outline-primary btn-outline-danger btn-outline-warning");
+            $(`.track-shared[data-share-tab-number='${tab_number}']`).addClass("btn-outline-primary");
+            $(`.track-shared[data-share-tab-number='${tab_number}']`).text("Tracking Stopped - Track Another Fleet?");
+            $(`.track-shared[data-share-tab-number='${tab_number}']`).prop("disabled", false);
+            $(`.share-key-input[data-share-tab-number='${tab_number}']`).prop("disabled", false);
+            $(`#shared-fleet-${tab_number}-tab`).text("Tracking Stopped");
+
+        }
+    });
+
+}
+
 function getTrackingData() {
 
     if (is_tracking) {
 
-        dataObject = {
-            "Action": "Get_Fleet_Data",
-            "Only_With_Commander": $("#only_with_commander:checked").val() ?? false
-        };
-    
-        $.ajax({
-            url: "/tracking/?core_action=api",
-            type: "POST",
-            data: dataObject,
-            dataType: "html",
-            success: function(result) {
-                
-                $(".fleet-display[data-tab-id='my-fleet']").html(result);
-                
-            },
-            error: function(result) {
-
-                $("#toggle_tracking").removeClass("btn-outline-primary btn-outline-danger btn-outline-warning");
-                $("#toggle_tracking").addClass("btn-outline-primary");
-                $("#toggle_tracking").text("Tracking Stopped - Start Again?");
-                $("#share_key").val("");
-                $("#share_container").prop("hidden", true);
-                $("#fleet_name").prop("disabled", false);
-                $("#fleet_type").prop("disabled", false);
-                $("#share_fleet").prop("disabled", false);
-                $(".fleet-display[data-tab-id='my-fleet']").empty();
-
-                is_tracking = false;
-
-            }
-        });
+        requestTrackingData();
 
     }
     for (each_tab in shared_fleets) {
 
-        dataObject = {
-            "Action": "Get_Fleet_Data",
-            "Share_Key": shared_fleets[each_tab],
-            "Only_With_Commander": $(`.shared_only_with_commander[data-share-tab-number='${each_tab}']:checked`).val() ?? false
-        };
-    
-        $.ajax({
-            url: "/tracking/?core_action=api",
-            type: "POST",
-            data: dataObject,
-            dataType: "html",
-            success: function(result) {
-                
-                $(`.fleet-display[data-share-tab-number='${each_tab}']`).html(result);
-                
-            },
-            error: function(result) {
-
-                delete shared_fleets[each_tab];
-                $(`.fleet-display[data-share-tab-number='${each_tab}']`).empty();
-                $(`.track-shared[data-share-tab-number='${each_tab}']`).removeClass("btn-outline-primary btn-outline-danger btn-outline-warning");
-                $(`.track-shared[data-share-tab-number='${each_tab}']`).addClass("btn-outline-primary");
-                $(`.track-shared[data-share-tab-number='${each_tab}']`).text("Tracking Stopped - Track Another Fleet?");
-                $(`.track-shared[data-share-tab-number='${each_tab}']`).prop("disabled", false);
-                $(`.share-key-input[data-share-tab-number='${each_tab}']`).prop("disabled", false);
-                $(`#shared-fleet-${each_tab}-tab`).text("Tracking Stopped");
-
-            }
-        });
+        requestSharedTrackingData(each_tab);
 
     }
 

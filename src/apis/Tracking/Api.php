@@ -274,7 +274,7 @@
 
                     $fleetStatus = $this->getFleetTrackingStatus(fleetID: $fleetCall["Data"]["fleet_id"]);
 
-                    if ($fleetStatus["Fleet Found"] and $fleetStatus["Status"] === "Active") {
+                    if ($fleetStatus["Fleet Found"] and ($fleetStatus["Status"] === "Active" or $fleetStatus["Status"] === "Starting")) {
     
                         $fleetData = new \Ridley\Objects\Fleets\FleetData(
                             dependencies: $this->dependencies,
@@ -294,7 +294,7 @@
 
                 $fleetStatus = $this->getFleetTrackingStatus(shareKey: $shareKey);
 
-                if ($fleetStatus["Fleet Found"] and $fleetStatus["Status"] === "Active") {
+                if ($fleetStatus["Fleet Found"] and ($fleetStatus["Status"] === "Active" or $fleetStatus["Status"] === "Starting")) {
 
                     $fleetData = new \Ridley\Objects\Fleets\FleetData(
                         dependencies: $this->dependencies,

@@ -4,6 +4,7 @@
 
     class Templates {
 
+        // Fleet Details View
         protected function detailedTemplate($fleetID) {
 
             $fleetData = $this->controller->getFleetData($fleetID);
@@ -153,6 +154,8 @@
 
                 </div>
 
+                <?php $this->memberDetailsModalTemplate(); ?>
+
                 <?php
             }
             else {
@@ -254,7 +257,7 @@
                 $initialDate = date("M d, Y — H:i EVE", (int)($eachMemberData["First Instance"] / 1000));
                 ?>
                 
-                <tr class="member_entry" data-row-id="<?php echo $eachMemberData["ID"]; ?>">
+                <tr class="member_entry" data-row-id="<?php echo $eachMemberData["ID"]; ?>"  data-bs-toggle="modal" data-bs-target="#details-modal">
                     <td class="text-start"><?php echo htmlspecialchars($eachMemberData["Name"] ?? ""); ?></td>
                     <td class="text-start"><?php echo htmlspecialchars($eachMemberData["Corporation Name"] ?? ""); ?></td>
                     <td class="text-start"><?php echo htmlspecialchars($eachMemberData["Alliance Name"] ?? ""); ?></td>
@@ -268,7 +271,57 @@
             }
 
         }
-        
+
+        protected function memberDetailsModalTemplate() {
+            ?>
+
+            <div id="details-modal" class="modal fade" tabindex="-1" aria-hidden="true">
+
+                <div class="modal-dialog modal-xl">
+
+                    <div class="modal-content bg-dark text-light border-secondary">
+
+                        <div class="modal-header border-secondary">
+
+                            <h5 class="modal-title">Member Details — <span id="modal-member-name"></span></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                        </div>
+                        <div class="modal-body">
+                            
+                            <div id="modal-spinner">
+                                <div class="d-flex justify-content-center" >
+                                    <div class="spinner-border text-secondary" style="width: 75px; height: 75px;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-danger fw-bold" id="modal-error">
+
+                                An error occurred while trying to get member data! Try again?
+
+                            </div>
+                            <canvas id="member-timeline-chart" hidden>
+
+                            </canvas>
+                            <div id="member-event-container" class="text-light mt-3">
+                                <h5>Event Log</h5>
+                                <ul id="member-event-log" class="list-group list-group-flush">
+
+                                </ul>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <?php
+        }
+
+        // List of Fleets View
         protected function mainTemplate() {
 
             $this->model->getRowCount();

@@ -45,6 +45,11 @@
                     $this->getClassBreakdown($this->targetFleet);
                     
                 }
+                elseif ($_POST["Action"] == "Get_Member_Timeline" and $this->targetFleet !== false and isset($_POST["Member_ID"])) {
+
+                    $this->getMemberTimeline($this->targetFleet, $_POST["Member_ID"]);
+                    
+                }
                 else {
 
                     throw new UserInputException(
@@ -369,6 +374,204 @@
                 );
 
             }
+
+        }
+
+        private function getMemberTimeline($fleetID, $memberID) {
+
+            $accessRestrictions = $this->generateAccessRestrictions();
+
+            $restrictionsQuery = ($accessRestrictions["Enabled"]) ? (" AND " . $accessRestrictions["Request"]) : "";
+
+            $checkQuery = $this->databaseConnection->prepare("
+                SELECT starttime, endtime FROM fleets WHERE id=:id" . $restrictionsQuery
+            );
+            $checkQuery->bindValue(":id", $fleetID);
+
+            foreach ($accessRestrictions["Variables"] as $eachVariable => $eachValue) {
+                $checkQuery->bindValue($eachVariable, $eachValue["Value"], $eachValue["Type"]);
+            }
+
+            $checkQuery->execute();
+
+            while ($incomingFleet = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
+
+                $returnData = [
+                    "Datasets" => [],
+                    "Events" => [],
+                    "Character" => null,
+                    "Start" => $incomingFleet["starttime"],
+                    "End" => $incomingFleet["endtime"]
+                ];
+
+                //Get IDs and Associated Names for Parsing
+                $idsQuery = $this->databaseConnection->prepare("
+                    SELECT DISTINCT shipid
+                    FROM fleetships
+                    WHERE fleetid = :fleetid AND characterid = :memberid
+
+                    UNION
+
+                    SELECT DISTINCT systemid
+                    FROM fleetlocations
+                    WHERE fleetid = :fleetid AND characterid = :memberid
+
+                    UNION
+
+                    SELECT DISTINCT regionid
+                    FROM fleetlocations
+                    LEFT JOIN evesystems ON evesystems.id = fleetlocations.systemid
+                    WHERE fleetid = :fleetid AND characterid = :memberid
+                ");
+                $idsQuery->bindValue(":fleetid", $fleetID);
+                $idsQuery->bindValue(":memberid", $memberID);
+                $idsQuery->execute();
+
+                $idsToCheck = $idsQuery->fetchAll(\PDO::FETCH_COLUMN);
+                $idsToCheck[] = $memberID;
+        
+                $knownNames = [];
+                if (!empty($idsToCheck)) {
+                    $esiHandler = new \Ridley\Objects\ESI\Handler($this->databaseConnection);
+    
+                    $namesCall = $esiHandler->call(endpoint: "/universe/names/", ids: $idsToCheck, retries: 1);
+    
+                    if ($namesCall["Success"]) {
+    
+                        foreach ($namesCall["Data"] as $eachID) {
+
+                            if (!isset($knownNames[$eachID["category"]])) {
+                                $knownNames[$eachID["category"]] = [];
+                            }
+
+                            $knownNames[$eachID["category"]][$eachID["id"]] = $eachID["name"];
+    
+                        }
+    
+                    }
+                    else {
+                        header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
+                        throw new \Exception("A names call failed while trying to get ship names.", 11001);
+                    }
+    
+                }
+
+                $returnData["Character"] = htmlentities($knownNames["character"][$memberID] ?? "Unknown Character");
+
+                //Get Roles and Position
+                $memberQuery = $this->databaseConnection->prepare("
+                    SELECT role, wingid, squadid, starttime, endtime
+                    FROM fleetmembers
+                    WHERE fleetid = :fleetid AND characterid = :memberid
+                ");
+    
+                $memberQuery->bindValue(":fleetid", $fleetID);
+                $memberQuery->bindValue(":memberid", $memberID);
+                $memberQuery->execute();
+
+                while ($incomingStatuses = $memberQuery->fetch(\PDO::FETCH_ASSOC)) {
+
+                    $returnData["Datasets"][] = [
+                        "label" => (htmlspecialchars(ucwords(str_replace("_", " ", $incomingStatuses["role"]))) . " — Wing: " . htmlspecialchars($incomingStatuses["wingid"] ?? "NONE") . " — Squad: " . htmlspecialchars($incomingStatuses["squadid"] ?? "NONE")),
+                        "data" => [[$incomingStatuses["starttime"], $incomingStatuses["endtime"]], null, null],
+                        "barThickness" => "flex"
+                    ];
+
+                    if (!isset($returnData["Events"][$incomingStatuses["starttime"]])) {
+                        $returnData["Events"][$incomingStatuses["starttime"]] = [];
+                    }
+                    $returnData["Events"][$incomingStatuses["starttime"]][] = htmlspecialchars("
+                        Joined Squad " . ($incomingStatuses["squadid"] ?? "NONE") . " in Wing " . ($incomingStatuses["wingid"] ?? "NONE") . " with Role " . ucwords(str_replace("_", " ", $incomingStatuses["role"])) . ".
+                    ");
+
+                    if (!isset($returnData["Events"][$incomingStatuses["endtime"]])) {
+                        $returnData["Events"][$incomingStatuses["endtime"]] = [];
+                    }
+                    $returnData["Events"][$incomingStatuses["endtime"]][] = htmlspecialchars("
+                        Left Squad " . ($incomingStatuses["squadid"] ?? "NONE") . " in Wing " . ($incomingStatuses["wingid"] ?? "NONE") . " with Role " . ucwords(str_replace("_", " ", $incomingStatuses["role"])) . ".
+                    ");
+    
+                }
+
+                //Get Ships
+                $shipQuery = $this->databaseConnection->prepare("
+                    SELECT shipid, starttime, endtime
+                    FROM fleetships
+                    WHERE fleetid = :fleetid AND characterid = :memberid
+                ");
+    
+                $shipQuery->bindValue(":fleetid", $fleetID);
+                $shipQuery->bindValue(":memberid", $memberID);
+                $shipQuery->execute();
+
+                while ($incomingShips = $shipQuery->fetch(\PDO::FETCH_ASSOC)) {
+
+                    $shipName = $knownNames["inventory_type"][$incomingShips["shipid"]] ?? "Unknown Ship";
+                    $returnData["Datasets"][] = [
+                        "label" => htmlspecialchars($shipName),
+                        "data" => [null, [$incomingShips["starttime"], $incomingShips["endtime"]], null],
+                        "barThickness" => "flex"
+                    ];
+
+                    if (!isset($returnData["Events"][$incomingShips["starttime"]])) {
+                        $returnData["Events"][$incomingShips["starttime"]] = [];
+                    }
+                    $returnData["Events"][$incomingShips["starttime"]][] = htmlspecialchars("Began Piloting a(n) " . $shipName . ".");
+
+                    if (!isset($returnData["Events"][$incomingShips["endtime"]])) {
+                        $returnData["Events"][$incomingShips["endtime"]] = [];
+                    }
+                    $returnData["Events"][$incomingShips["endtime"]][] = htmlspecialchars("Stopped Piloting a(n) " . $shipName . ".");
+    
+                }
+
+                //Get Locations
+                $locationQuery = $this->databaseConnection->prepare("
+                    SELECT systemid, evesystems.regionid AS regionid, starttime, endtime
+                    FROM fleetlocations
+                    LEFT JOIN evesystems ON evesystems.id = fleetlocations.systemid
+                    WHERE fleetid = :fleetid AND characterid = :memberid
+                ");
+    
+                $locationQuery->bindValue(":fleetid", $fleetID);
+                $locationQuery->bindValue(":memberid", $memberID);
+                $locationQuery->execute();
+
+                while ($incomingLocations = $locationQuery->fetch(\PDO::FETCH_ASSOC)) {
+
+                    $regionName = $knownNames["region"][$incomingLocations["regionid"]] ?? "Unknown Region";
+                    $systemName = $knownNames["solar_system"][$incomingLocations["systemid"]] ?? "Unknown System";
+                    $returnData["Datasets"][] = [
+                        "label" => "[" . htmlspecialchars($regionName) . "] " . htmlspecialchars($systemName),
+                        "data" => [null, null, [$incomingLocations["starttime"], $incomingLocations["endtime"]]],
+                        "barThickness" => "flex"
+                    ];
+
+                    if (!isset($returnData["Events"][$incomingLocations["starttime"]])) {
+                        $returnData["Events"][$incomingLocations["starttime"]] = [];
+                    }
+                    $returnData["Events"][$incomingLocations["starttime"]][] = htmlspecialchars("Entered the System of " . $systemName . " in the Region of " . $regionName . ".");
+
+                    if (!isset($returnData["Events"][$incomingLocations["endtime"]])) {
+                        $returnData["Events"][$incomingLocations["endtime"]] = [];
+                    }
+                    $returnData["Events"][$incomingLocations["endtime"]][] = htmlspecialchars("Exited the System of " . $systemName . " in the Region of " . $regionName . ".");
+
+                }
+
+                ksort($returnData["Events"]);
+
+                echo json_encode($returnData);
+                return;
+        
+            }
+
+            throw new UserInputException(
+                inputs: "Fleet ID", 
+                expected_values: "A Valid Fleet ID to Pull Ships For", 
+                hard_coded_inputs: true,
+            );
+
 
         }
 

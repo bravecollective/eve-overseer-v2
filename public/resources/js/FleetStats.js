@@ -1,3 +1,5 @@
+var memberTimeline = null;
+
 jQuery(document).ready(function () {
     
     var csrfToken = $("meta[name='csrftoken']").attr("content");
@@ -21,6 +23,13 @@ jQuery(document).ready(function () {
         if (window.confirm("Are you sure you want to delete this fleet?")) {
             deleteFleet();
         }
+    });
+
+    $(".member_entry").on("click", function () {
+        if (memberTimeline !== null) {
+            memberTimeline.destroy();
+        }
+        loadMemberTimeline($(this).attr("data-row-id"));
     });
 
     let fleet_id = window.location.pathname.slice(13, -1);
@@ -233,6 +242,119 @@ function loadShipBreakdown() {
             $("#ships-spinner").prop("hidden", true);
             $("#ships-card").prop("hidden", true);
             $("#ships-chart").prop("hidden", false);
+
+        }
+    });
+
+}
+
+function createMemberTimeline(incomingData) {
+
+    memberTimeline = new Chart(
+        $("#member-timeline-chart"),
+        {
+            type: "bar",
+            data: {
+                labels: ["Role", "Ship", "Location"],
+                datasets: incomingData["Datasets"]
+            },
+            options: {
+                indexAxis: "y",
+                skipNull: true,
+                animation: false,
+                scales: {
+                    x: {
+                        type: "time",
+                        adapters: {
+                            date: {
+                                zone: "utc"
+                            }
+                        },
+                        min: incomingData["Start"],
+                        max: incomingData["End"]
+                    },
+                    y: {
+                        stacked: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return (context.dataset.label);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+    
+}
+
+function renderTimeline(incomingData) {
+
+    for (timestamp in incomingData["Events"]) {
+
+        $("#member-event-log").append(
+            $("<li/>")
+                .addClass("list-group-item list-group-item-secondary fw-bold mt-2")
+                .text(new Date(parseInt(timestamp)).toISOString())
+        );
+
+        for (eachEvent of incomingData["Events"][timestamp]) {
+
+            $("#member-event-log").append(
+                $("<li/>")
+                    .addClass("list-group-item list-group-item-secondary")
+                    .text(eachEvent)
+            );
+
+        }
+
+    }
+
+}
+
+function loadMemberTimeline(member_id) {
+
+    $("#modal-member-name").text("Loading...");
+    $("#member-timeline-chart").prop("hidden", true);
+    $("#member-timeline-chart").empty();
+    $("#member-event-container").prop("hidden", true);
+    $("#member-event-log").empty();
+    $("#modal-spinner").prop("hidden", false);
+    $("#modal-error").prop("hidden", true);
+
+    dataObject = {
+        "Action": "Get_Member_Timeline",
+        "Member_ID": member_id
+    };
+
+    $.ajax({
+        url: (window.location.pathname + "?core_action=api"),
+        type: "POST",
+        data: dataObject,
+        mimeType: "application/json",
+        dataType: "json",
+        success: function(result) {
+            
+            $("#modal-member-name").text(result["Character"]);
+            createMemberTimeline(result);
+            renderTimeline(result);
+            $("#modal-spinner").prop("hidden", true);
+            $("#member-timeline-chart").prop("hidden", false);
+            $("#member-event-container").prop("hidden", false);
+
+        },
+        error: function(result) {
+
+            $("#modal-member-name").text("ERROR");
+            $("#modal-spinner").prop("hidden", true);
+            $("#modal-error").prop("hidden", false);
 
         }
     });
