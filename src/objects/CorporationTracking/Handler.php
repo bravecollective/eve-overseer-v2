@@ -32,6 +32,24 @@
 
         }
 
+        public function updateAllCorps() {
+
+            $updateQuery = $this->databaseConnection->prepare("SELECT characterid, corporationid, allianceid, recheck FROM corptrackers");
+            $updateQuery->execute();
+
+            while ($corpData = $updateQuery->fetch(\PDO::FETCH_ASSOC)) {
+
+                if (
+                    $corpData["recheck"] <= time() 
+                    and !$this->updateTracking($corpData["characterid"], $corpData["corporationid"], $corpData["allianceid"])
+                ) {
+                    $this->deleteTrackingData($corpData["corporationid"]);
+                }
+
+            }
+
+        }
+
         public function updateTracking($characterID, $corporationID, $allianceID) {
 
             try {

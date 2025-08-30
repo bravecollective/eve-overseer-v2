@@ -34,6 +34,10 @@
                             <?php $this->corporationTemplate(); ?>
                         </select>
 
+                        <div class="d-grid mt-2">
+                            <button type="button" class="btn btn-sm btn-warning" id="update_all_button">Update All Corporations</button>
+                        </div>
+
                         <label class="form-label mt-2" for="fleet_condition">Fleet Types</label>
                         <select class="form-select form-select-sm" multiple size="4" name="fleet_condition[]" id="fleet_condition">
                             <?php $this->fleetsTemplate(); ?>

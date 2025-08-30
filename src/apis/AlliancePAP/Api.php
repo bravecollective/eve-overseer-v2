@@ -25,6 +25,11 @@
                     $this->checkTracking($_POST["ID"]);
                     
                 }
+                elseif ($_POST["Action"] == "Update_All_Corps") {
+
+                    $this->updateAllCorps();
+                    
+                }
                 else {
 
                     throw new UserInputException(
@@ -47,6 +52,14 @@
                 );
 
             }
+
+        }
+
+        private function updateAllCorps() {
+
+            $corpTrackingHandler = new \Ridley\Objects\CorporationTracking\Handler($this->dependencies);
+            $corpTrackingHandler->updateAllCorps();
+            echo json_encode(["Status" => "Success"]);
 
         }
 

@@ -30,8 +30,43 @@ jQuery(document).ready(function () {
         }
 
     });
+
+    $("#update_all_button").click(function () {
+        updateAllCorps();
+    });
     
 });
+
+function updateAllCorps() {
+
+    $("#update_all_button").prop("disabled", true);
+    $("#update_all_button").text("Updating...");
+
+    dataObject = {
+        "Action": "Update_All_Corps"
+    };
+
+    $.ajax({
+        url: "/alliance_participation/?core_action=api",
+        type: "POST",
+        data: dataObject,
+        mimeType: "application/json",
+        dataType: "json",
+        success: function(result) {
+            
+            location.reload(true);
+
+        },
+        error: function(result) {
+
+            $("#update_all_button").prop("disabled", false);
+            $("#update_all_button").addClass("btn-danger");
+            $("#update_all_button").text("Update Failed... Try Again?");
+
+        }
+    });
+
+}
 
 function checkForPAPMode(corporationID) {
 

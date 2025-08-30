@@ -2,7 +2,7 @@
 
 Eve Overseer is a fleet activity and participation tracking application for Eve Online, usable with Brave Neucore. 
 
-**Current Version: Ensign – 2 – 1**
+**Current Version: Ensign – 2 – 2**
 
 ## Requirements
 
