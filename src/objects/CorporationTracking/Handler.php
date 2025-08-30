@@ -32,25 +32,26 @@
 
         }
 
-        public function updateAllCorps() {
+        public function updateAllCorps($fromScript = false) {
 
             $updateQuery = $this->databaseConnection->prepare("SELECT characterid, corporationid, allianceid, recheck FROM corptrackers");
             $updateQuery->execute();
 
             while ($corpData = $updateQuery->fetch(\PDO::FETCH_ASSOC)) {
 
-                if (
-                    $corpData["recheck"] <= time() 
-                    and !$this->updateTracking($corpData["characterid"], $corpData["corporationid"], $corpData["allianceid"])
-                ) {
-                    $this->deleteTrackingData($corpData["corporationid"]);
+                if ($corpData["recheck"] <= time()) {
+                    $this->updateTracking($corpData["characterid"], $corpData["corporationid"], $corpData["allianceid"], false, $fromScript);
                 }
 
             }
 
         }
 
-        public function updateTracking($characterID, $corporationID, $allianceID) {
+        public function updateTracking($characterID, $corporationID, $allianceID, $logFailuresAsRemoval = true, $fromScript = false) {
+
+            $logEntryType = ($logFailuresAsRemoval) ? "Removed Corp Tracker" : "Corp Tracker Failure";
+            $logEntryPage = ($fromScript) ? "" : null;
+            $logEntryActor = ($fromScript) ? "[Update Script]" : null;
 
             try {
 
@@ -60,7 +61,7 @@
             catch (\Exception $exception) {
 
                 $logString = ("Corporation ID: " . $corporationID . " \nCharacter ID: " . $characterID . " \nReason: Token Went Invalid");
-                $this->logger->make_log_entry(logType: "Removed Corp Tracker", logDetails: $logString);
+                $this->logger->make_log_entry(logType: $logEntryType, logPage: $logEntryPage, logActor: $logEntryActor, logDetails: $logString);
                 return false;
 
             }
@@ -89,7 +90,7 @@
             else {
 
                 $logString = ("Corporation ID: " . $corporationID . " \nCharacter ID: " . $characterID . " \nReason: Affiliation Call Failed");
-                $this->logger->make_log_entry(logType: "Removed Corp Tracker", logDetails: $logString);
+                $this->logger->make_log_entry(logType: $logEntryType, logPage: $logEntryPage, logActor: $logEntryActor, logDetails: $logString);
                 return false;
                                 
             }
@@ -97,7 +98,7 @@
             if (is_null($currentCorporation) or $currentCorporation != $corporationID or ($currentCorporation >= 1000000 and $currentCorporation <= 2000000)) {
 
                 $logString = ("Corporation ID: " . $corporationID . " \nCharacter ID: " . $characterID . " \nReason: Character No Longer In Target Corporation");
-                $this->logger->make_log_entry(logType: "Removed Corp Tracker", logDetails: $logString);
+                $this->logger->make_log_entry(logType: $logEntryType, logPage: $logEntryPage, logActor: $logEntryActor, logDetails: $logString);
                 return false;
 
             }
@@ -111,7 +112,7 @@
             else {
 
                 $logString = ("Corporation ID: " . $corporationID . " \nCharacter ID: " . $characterID . " \nReason: Members Call Failure");
-                $this->logger->make_log_entry(logType: "Removed Corp Tracker", logDetails: $logString);
+                $this->logger->make_log_entry(logType: $logEntryType, logPage: $logEntryPage, logActor: $logEntryActor, logDetails: $logString);
                 return false;
                                 
             }
@@ -154,7 +155,7 @@
                 else {
     
                     $logString = ("Corporation ID: " . $corporationID . " \nCharacter ID: " . $characterID . " \nReason: Names Call Failure");
-                    $this->logger->make_log_entry(logType: "Corp Tracker Failure", logDetails: $logString);
+                    $this->logger->make_log_entry(logType: "Corp Tracker Failure", logPage: $logEntryPage, logActor: $logEntryActor, logDetails: $logString);
                     return true;
     
                 }
@@ -227,7 +228,7 @@
             $insertLinks->execute();
 
             $logString = ("Corporation ID: " . $corporationID . " \nCharacter ID: " . $characterID . " \nMembers: " . count($entries));
-            $this->logger->make_log_entry(logType: "Updated Corp Members", logDetails: $logString);
+            $this->logger->make_log_entry(logType: "Updated Corp Members", logPage: $logEntryPage, logActor: $logEntryActor, logDetails: $logString);
             return true;
 
         }

@@ -2,6 +2,19 @@
 
 Changes for each version along with any requirements to update from the previous version will be listed below.
 
+## Patch Version Ensign – 2 – 3 Update
+
+### Alliance Participation
+
+* Added a script to update all Corporation Trackers.
+* Bulk Corporation Tracker updates no longer delete corporations.
+
+### UPDATE INSTRUCTIONS (From Version Ensign – 0 – *)
+
+1. Pause operation of the Fleet Checker.
+2. Sync up files with the repository.
+3. Restart operation of the Fleet Checker.
+
 ## Patch Version Ensign – 2 – 2 Update
 
 ### Alliance Participation
