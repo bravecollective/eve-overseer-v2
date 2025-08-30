@@ -7,23 +7,21 @@
     class Api implements \Ridley\Interfaces\Api {
 
         private $databaseConnection;
-        private $configVariables;
         private $logger;
         private $characterData;
-        private $coreGroups;
         private $userAuthorization;
         private $esiHandler;
+        private $fleetAccessController;
 
         public function __construct(
             private \Ridley\Core\Dependencies\DependencyManager $dependencies
         ) {
 
             $this->databaseConnection = $this->dependencies->get("Database");
-            $this->configVariables = $this->dependencies->get("Configuration Variables");
             $this->logger = $this->dependencies->get("Logging");
             $this->characterData = $this->dependencies->get("Character Stats");
-            $this->coreGroups = $this->dependencies->get("Core Groups");
             $this->userAuthorization = $this->dependencies->get("Authorization Control");
+            $this->fleetAccessController = new \Ridley\Objects\AccessControl\Fleet($this->dependencies);
 
             if (isset($_POST["Action"])) {
 
@@ -98,7 +96,7 @@
 
                 if (!$fleetStatus["Fleet Found"]) {
 
-                    if (!isset($this->getFleetTypes()[$fleetType])) {
+                    if (!isset($this->fleetAccessController->getFleetTypes()[$fleetType])) {
                 
                         throw new UserInputException(
                             inputs: "Fleet Type", 
@@ -154,7 +152,7 @@
                     and (int)$fleetStatus["Commander"] === (int)$this->characterData["Character ID"]
                 ) {
 
-                    if (!isset($this->getFleetTypes()[$fleetStatus["Type ID"]])) {
+                    if (!isset($this->fleetAccessController->getFleetTypes()[$fleetStatus["Type ID"]])) {
                 
                         throw new UserInputException(
                             inputs: "Fleet Type", 
@@ -178,7 +176,7 @@
                     and (int)$fleetStatus["Commander"] !== (int)$this->characterData["Character ID"]
                 ) {
 
-                    if (!isset($this->getFleetTypes()[$fleetStatus["Type ID"]])) {
+                    if (!isset($this->fleetAccessController->getFleetTypes()[$fleetStatus["Type ID"]])) {
                 
                         throw new UserInputException(
                             inputs: "Fleet Type", 
@@ -416,54 +414,6 @@
             }
 
             return $output;
-
-        }
-
-        private function getFleetTypes() {
-
-            $fleetTypes = [];
-
-            $checkQuery = $this->databaseConnection->prepare("
-                SELECT fleettypes.id AS id, fleettypes.name AS name, fleettypeaccess.roletype AS roletype, fleettypeaccess.roleid AS roleid
-                FROM fleettypeaccess
-                LEFT JOIN fleettypes
-                ON fleettypeaccess.typeid = fleettypes.id
-                WHERE fleettypeaccess.accesstype = :accesstype
-                ORDER BY name ASC
-            ");
-            $checkQuery->bindValue(":accesstype", "Command");
-            $checkQuery->execute();
-
-            if ($this->configVariables["Auth Type"] == "Eve") {
-
-                while ($incomingTypes = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
-
-                    if (
-                        ($incomingTypes["roletype"] == "Character" and $incomingTypes["roleid"] == $this->characterData["Character ID"])
-                        or ($incomingTypes["roletype"] == "Corporation" and $incomingTypes["roleid"] == $this->characterData["Corporation ID"])
-                        or ($incomingTypes["roletype"] == "Alliance" and $incomingTypes["roleid"] == $this->characterData["Alliance ID"])
-                    ) {
-                        $fleetTypes[$incomingTypes["id"]] = $incomingTypes["name"];
-                    }
-
-                }
-
-            }
-            elseif ($this->configVariables["Auth Type"] == "Neucore") {
-
-                while ($incomingTypes = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
-
-                    if (
-                        $incomingTypes["roletype"] == "Neucore" and isset($this->coreGroups[$incomingTypes["roleid"]])
-                    ) {
-                        $fleetTypes[$incomingTypes["id"]] = $incomingTypes["name"];
-                    }
-
-                }
-
-            }
-
-            return $fleetTypes;
 
         }
 

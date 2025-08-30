@@ -7,8 +7,7 @@
         private $databaseConnection;
         private $accessRoles;
         private $characterData;
-        private $coreGroups;
-        private $configVariables;
+        private $fleetAccessController;
         private $approvedSortKeys = [
             "name",
             "type",
@@ -26,73 +25,8 @@
             $this->databaseConnection = $this->dependencies->get("Database");
             $this->accessRoles = $this->dependencies->get("Access Roles");
             $this->characterData = $this->dependencies->get("Character Stats");
-            $this->coreGroups = $this->dependencies->get("Core Groups");
-            $this->configVariables = $this->dependencies->get("Configuration Variables");
+            $this->fleetAccessController = new \Ridley\Objects\AccessControl\Fleet($this->dependencies);
             
-        }
-
-        public function getFleetTypes() {
-
-            $fleetTypes = [];
-
-            if (in_array("Super Admin", $this->accessRoles) or in_array("View Fleet Stats", $this->accessRoles)) {
-
-                $checkQuery = $this->databaseConnection->prepare("
-                    SELECT fleettypes.id AS id, fleettypes.name AS name FROM fleettypes
-                ");
-                $checkQuery->execute();
-
-                while ($incomingTypes = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
-                    $fleetTypes[$incomingTypes["id"]] = $incomingTypes["name"];
-                }
-
-            }
-            else {
-
-                $checkQuery = $this->databaseConnection->prepare("
-                    SELECT fleettypes.id AS id, fleettypes.name AS name, fleettypeaccess.roletype AS roletype, fleettypeaccess.roleid AS roleid
-                    FROM fleettypeaccess
-                    LEFT JOIN fleettypes
-                    ON fleettypeaccess.typeid = fleettypes.id
-                    WHERE fleettypeaccess.accesstype = :accesstype
-                    ORDER BY name ASC
-                ");
-                $checkQuery->bindValue(":accesstype", "Audit");
-                $checkQuery->execute();
-
-                if ($this->configVariables["Auth Type"] == "Eve") {
-
-                    while ($incomingTypes = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
-
-                        if (
-                            ($incomingTypes["roletype"] == "Character" and $incomingTypes["roleid"] == $this->characterData["Character ID"])
-                            or ($incomingTypes["roletype"] == "Corporation" and $incomingTypes["roleid"] == $this->characterData["Corporation ID"])
-                            or ($incomingTypes["roletype"] == "Alliance" and $incomingTypes["roleid"] == $this->characterData["Alliance ID"])
-                        ) {
-                            $fleetTypes[$incomingTypes["id"]] = $incomingTypes["name"];
-                        }
-
-                    }
-
-                }
-                elseif ($this->configVariables["Auth Type"] == "Neucore") {
-
-                    while ($incomingTypes = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
-
-                        if (
-                            $incomingTypes["roletype"] == "Neucore" and isset($this->coreGroups[$incomingTypes["roleid"]])
-                        ) {
-                            $fleetTypes[$incomingTypes["id"]] = $incomingTypes["name"];
-                        }
-
-                    }
-
-                }
-
-            }
-
-            return $fleetTypes;
-
         }
 
         public function getFleetData($fleetID) {
@@ -166,7 +100,7 @@
             }
             else {
 
-                $approvedFleets = $this->getFleetTypes();
+                $approvedFleets = $this->fleetAccessController->getFleetTypes(forAudit: True);
 
                 $fleetPlaceholders = [];
                 $fleetCounter = 0;
@@ -228,7 +162,7 @@
             $fleetCounter = 0;
             if (isset($_POST["fleet_condition"]) and !empty($_POST["fleet_condition"])) {
 
-                $knownFleets = $this->getFleetTypes();
+                $knownFleets = $this->fleetAccessController->getFleetTypes(forAudit: True);
 
                 foreach ($_POST["fleet_condition"] as $eachID) {
 

@@ -6,9 +6,6 @@
         
         private $databaseConnection;
         private $logger;
-        private $accessRoles;
-        private $characterData;
-        private $coreGroups;
         private $configVariables;
         private $approvedSortKeys = [
             "corporation_name",
@@ -31,9 +28,6 @@
             
             $this->databaseConnection = $this->dependencies->get("Database");
             $this->logger = $this->dependencies->get("Logging");
-            $this->accessRoles = $this->dependencies->get("Access Roles");
-            $this->characterData = $this->dependencies->get("Character Stats");
-            $this->coreGroups = $this->dependencies->get("Core Groups");
             $this->configVariables = $this->dependencies->get("Configuration Variables");
             
             if (isset($_GET["action"]) and $_GET["action"] == "login") {
@@ -77,7 +71,9 @@
                 "Variables" => []
             ];
 
-            if (in_array("Super Admin", $this->accessRoles) or in_array("View PAP Data", $this->accessRoles)) {
+            $participationAccessController = new \Ridley\Objects\AccessControl\Participation($this->dependencies);
+
+            if ($participationAccessController->checkForAccessBypass()) {
 
                 $filterDetails["Enabled"] = false;
                 return $filterDetails;
@@ -89,45 +85,19 @@
                     "Corporation" => [],
                     "Alliance" => []
                 ];
-                $entityCounter = 0;
+                $placeholderCounter = 0;
+                $allowedEntities = $participationAccessController->getEntityLeadershipFilters();
 
-                $checkQuery = $this->databaseConnection->prepare("
-                    SELECT entitytype, entityid, roletype, roleid FROM entitytypeaccess WHERE entitytype != :entitytype
-                ");
-                $checkQuery->bindValue(":entitytype", "Character");
-                $checkQuery->execute();
-    
-                if ($this->configVariables["Auth Type"] == "Eve") {
-    
-                    while ($incomingEntities = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
-
-                        if (
-                            ($incomingEntities["roletype"] == "Character" and $incomingEntities["roleid"] == $this->characterData["Character ID"])
-                            or ($incomingEntities["roletype"] == "Corporation" and $incomingEntities["roleid"] == $this->characterData["Corporation ID"])
-                            or ($incomingEntities["roletype"] == "Alliance" and $incomingEntities["roleid"] == $this->characterData["Alliance ID"])
-                        ) {
-                            $placeholders[$incomingEntities["entitytype"]][] = (":entity_" . $entityCounter);
-                            $filterDetails["Variables"][":entity_" . $entityCounter] = ["Value" => $incomingEntities["entityid"], "Type" => \PDO::PARAM_INT];
-                            $entityCounter++;
-                        }
-    
-                    }
-    
+                foreach ($allowedEntities["Corporation"] as $eachID) {
+                    $placeholders["Corporation"][] = (":entity_" . $placeholderCounter);
+                    $filterDetails["Variables"][":entity_" . $placeholderCounter] = ["Value" => $eachID, "Type" => \PDO::PARAM_INT];
+                    $placeholderCounter++;
                 }
-                elseif ($this->configVariables["Auth Type"] == "Neucore") {
-    
-                    while ($incomingEntities = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
 
-                        if (
-                            $incomingEntities["roletype"] == "Neucore" and isset($this->coreGroups[$incomingEntities["roleid"]])
-                        ) {
-                            $placeholders[$incomingEntities["entitytype"]][] = (":entity_" . $entityCounter);
-                            $filterDetails["Variables"][":entity_" . $entityCounter] = ["Value" => $incomingEntities["entityid"], "Type" => \PDO::PARAM_INT];
-                            $entityCounter++;
-                        }
-    
-                    }
-    
+                foreach ($allowedEntities["Alliance"] as $eachID) {
+                    $placeholders["Alliance"][] = (":entity_" . $placeholderCounter);
+                    $filterDetails["Variables"][":entity_" . $placeholderCounter] = ["Value" => $eachID, "Type" => \PDO::PARAM_INT];
+                    $placeholderCounter++;
                 }
 
                 if ($forCorpTrackers) {

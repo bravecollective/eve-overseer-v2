@@ -56,12 +56,12 @@
 
             $alliances = [];
             $accessRestrictions = $this->controller->generateAccessRestrictions();
-            $accessClause = ($accessRestrictions["Enabled"]) ? ("WHERE " . $accessRestrictions["Request"]) : "";
+            $accessClause = ($accessRestrictions["Enabled"]) ? ("AND " . $accessRestrictions["Request"]) : "";
 
             $checkQuery = $this->databaseConnection->prepare("
                 SELECT DISTINCT allianceid AS id
                 FROM fleetmembers
-                " . $accessClause . "
+                WHERE allianceid IS NOT NULL " . $accessClause . "
                 ORDER BY allianceid
             ");
             foreach ($accessRestrictions["Variables"] as $eachVariable => $eachValue) {

@@ -7,26 +7,22 @@
     class Api implements \Ridley\Interfaces\Api {
 
         private $databaseConnection;
-        private $logger;
         private $accessRoles;
         private $characterData;
-        private $coreGroups;
-        private $configVariables;
         private $urlData;
         private $targetFleet;
+        private $fleetAccessController;
 
         public function __construct(
             private \Ridley\Core\Dependencies\DependencyManager $dependencies
         ) {
 
             $this->databaseConnection = $this->dependencies->get("Database");
-            $this->logger = $this->dependencies->get("Logging");
             $this->accessRoles = $this->dependencies->get("Access Roles");
             $this->characterData = $this->dependencies->get("Character Stats");
-            $this->coreGroups = $this->dependencies->get("Core Groups");
-            $this->configVariables = $this->dependencies->get("Configuration Variables");
             $this->urlData = $this->dependencies->get("URL Data");
             $this->targetFleet = $this->urlData["Page Topic"];
+            $this->fleetAccessController = new \Ridley\Objects\AccessControl\Fleet($this->dependencies);
 
             if (isset($_POST["Action"])) {
 
@@ -74,55 +70,6 @@
             }
 
         }
-
-        private function getFleetTypes() {
-
-            $fleetTypes = [];
-
-            $checkQuery = $this->databaseConnection->prepare("
-                SELECT fleettypes.id AS id, fleettypes.name AS name, fleettypeaccess.roletype AS roletype, fleettypeaccess.roleid AS roleid
-                FROM fleettypeaccess
-                LEFT JOIN fleettypes
-                ON fleettypeaccess.typeid = fleettypes.id
-                WHERE fleettypeaccess.accesstype = :accesstype
-                ORDER BY name ASC
-            ");
-            $checkQuery->bindValue(":accesstype", "Audit");
-            $checkQuery->execute();
-
-            if ($this->configVariables["Auth Type"] == "Eve") {
-
-                while ($incomingTypes = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
-
-                    if (
-                        ($incomingTypes["roletype"] == "Character" and $incomingTypes["roleid"] == $this->characterData["Character ID"])
-                        or ($incomingTypes["roletype"] == "Corporation" and $incomingTypes["roleid"] == $this->characterData["Corporation ID"])
-                        or ($incomingTypes["roletype"] == "Alliance" and $incomingTypes["roleid"] == $this->characterData["Alliance ID"])
-                    ) {
-                        $fleetTypes[$incomingTypes["id"]] = $incomingTypes["name"];
-                    }
-
-                }
-
-            }
-            elseif ($this->configVariables["Auth Type"] == "Neucore") {
-
-                while ($incomingTypes = $checkQuery->fetch(\PDO::FETCH_ASSOC)) {
-
-                    if (
-                        $incomingTypes["roletype"] == "Neucore" and isset($this->coreGroups[$incomingTypes["roleid"]])
-                    ) {
-                        $fleetTypes[$incomingTypes["id"]] = $incomingTypes["name"];
-                    }
-
-                }
-
-            }
-
-            return $fleetTypes;
-
-        }
-
         
         private function generateAccessRestrictions() {
 
@@ -140,7 +87,7 @@
             }
             else {
 
-                $approvedFleets = $this->getFleetTypes();
+                $approvedFleets = $this->fleetAccessController->getFleetTypes(forAudit: True);
 
                 $fleetPlaceholders = [];
                 $fleetCounter = 0;
@@ -577,7 +524,7 @@
 
         private function deleteFleet($fleetID) {
 
-            if (in_array("Super Admin", $this->accessRoles) or in_array("View Fleet Stats", $this->accessRoles)) {
+            if (in_array("Super Admin", $this->accessRoles) or in_array("Delete Fleets", $this->accessRoles)) {
 
                 $checkQuery = $this->databaseConnection->prepare("
                     SELECT COUNT(*) FROM fleets WHERE id=:id

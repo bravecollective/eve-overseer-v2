@@ -27,7 +27,7 @@
                                 <div>Fleet Commander: <?php echo htmlspecialchars($fleetData["Data"]["commander"]); ?></div>
 
                                 <?php
-                                if (in_array("Super Admin", $this->accessRoles) or in_array("View Fleet Stats", $this->accessRoles)) {
+                                if (in_array("Super Admin", $this->accessRoles) or in_array("Delete Fleets", $this->accessRoles)) {
                                     ?>
 
                                     <div class="d-grid mt-2">
@@ -470,7 +470,7 @@
         protected function fleetsTemplate() {
 
             $selectedFleets = (isset($_POST["fleet_condition"]) and !empty($_POST["fleet_condition"])) ? $_POST["fleet_condition"] : [];
-            $fleetList = $this->controller->getFleetTypes();
+            $fleetList = $this->fleetAccessController->getFleetTypes(forAudit: True);
 
             foreach ($fleetList as $eachID => $eachName) {
                 $sectionStatus = (in_array($eachID, $selectedFleets)) ? "selected" : "";
@@ -558,6 +558,7 @@
         protected $controller;
         protected $accessRoles;
         protected $urlData;
+        protected $fleetAccessController;
         
         public function __construct(
             private \Ridley\Core\Dependencies\DependencyManager $dependencies
@@ -567,6 +568,7 @@
             $this->controller = $this->dependencies->get("Controller");
             $this->accessRoles = $this->dependencies->get("Access Roles");
             $this->urlData = $this->dependencies->get("URL Data");
+            $this->fleetAccessController = new \Ridley\Objects\AccessControl\Fleet($this->dependencies);
             
         }
         

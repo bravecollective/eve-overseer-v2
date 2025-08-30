@@ -23,6 +23,7 @@
     $this->registerRole("Member");
     $this->registerRole("FC");
     $this->registerRole("View Fleet Stats");
+    $this->registerRole("Delete Fleets");
     $this->registerRole("Entity Leadership");
     $this->registerRole("View PAP Data");
 

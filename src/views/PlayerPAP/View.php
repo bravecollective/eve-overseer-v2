@@ -161,7 +161,78 @@
 
             </div>
 
+            <?php $this->accountModalTemplate(); ?>
             
+            <?php
+        }
+
+        protected function accountModalTemplate() {
+            ?>
+
+            <div id="account-modal" class="modal fade" tabindex="-1" aria-hidden="true">
+
+                <div class="modal-dialog modal-xl">
+
+                    <div class="modal-content bg-dark text-light border-secondary">
+
+                        <div class="modal-header border-secondary">
+
+                            <h5 class="modal-title"><span id="modal-account-type"></span> Account Details — <span id="modal-account-name"></span></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                        </div>
+                        <div class="modal-body">
+                            
+                            <div id="modal-spinner">
+                                <div class="d-flex justify-content-center" >
+                                    <div class="spinner-border text-secondary" style="width: 75px; height: 75px;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-danger fw-bold" id="modal-error">
+
+                                An error occurred while trying to get account data! Try again?
+
+                            </div>
+                            <div id="account-container" class="row">
+                                <div class="col-lg-4">
+                                    <table class="table table-dark align-middle text-wrap small">
+                                        <thead class="p-4 small">
+                                            <tr class="align-middle">
+                                                <th scope="col" style="width: 34%;">Characters</th>
+                                                <th scope="col" style="width: 33%;">Corporation</th>
+                                                <th scope="col" style="width: 33%;">Alliance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="small" id="account-characters">
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-lg-8">
+                                    <table class="table table-dark table-hover align-middle text-wrap small">
+                                        <thead class="p-4 small">
+                                            <tr class="align-middle">
+                                                <th scope="col" style="width: 30%;">Fleets</th>
+                                                <th scope="col" style="width: 15%;">Type</th>
+                                                <th scope="col" style="width: 15%;">Date</th>
+                                                <th scope="col" style="width: 25%;">Character</th>
+                                                <th scope="col" style="width: 15%;">Duration</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="small" id="account-fleets">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
             <?php
         }
 
@@ -194,7 +265,7 @@
                 $lastActiveValue = ($eachRow["last_active"] != 0) ? date("F jS, o", htmlspecialchars((int)$eachRow["last_active"])) : "NEVER";
                 ?>
                 
-                <tr class="player_entry <?php echo $highlight; ?>" data-row-id="<?php echo $eachRow["account_id"]; ?>" data-row-type="<?php echo $eachRow["account_type"]; ?>">
+                <tr class="player_entry <?php echo $highlight; ?>" data-row-id="<?php echo $eachRow["account_id"]; ?>" data-row-type="<?php echo $eachRow["account_type"]; ?>" data-row-name="<?php echo $eachRow["account_name"]; ?>" data-bs-toggle="modal" data-bs-target="#account-modal">
                     <td><?php echo htmlspecialchars($eachRow["account_name"] ?? ""); ?></td>
                     <td><?php echo htmlspecialchars($eachRow["account_type"] ?? ""); ?></td>
                     <td><?php echo $recentFleetsValue; ?></td>

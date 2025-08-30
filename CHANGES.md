@@ -2,6 +2,33 @@
 
 Changes for each version along with any requirements to update from the previous version will be listed below.
 
+## Minor Version Ensign – 2 – 0 Update
+
+### Player Participation
+
+* Added an account details modal, displaying known characters and a list of recent fleets. 
+
+### Fleet Stats
+
+* Added a dedicated role for deleting fleets.
+
+### Optimization
+
+* Moved Corporation Tracking operations to a dedicated class.
+* Moved some logic determining Participation data access to a dedicated class.
+* Moved some logic determining Fleet Type access to a dedicated class.
+
+### Bug Fixes
+
+* Fixed an issue where the alliance selector in Player / Alliance Population would fail to populate.
+* Corporation Trackers are no longer removed after Names Call Failures.
+
+### UPDATE INSTRUCTIONS (From Version Ensign – 0 – *)
+
+1. Pause operation of the Fleet Checker.
+2. Sync up files with the repository.
+3. Restart operation of the Fleet Checker.
+
 ## Minor Version Ensign – 1 – 0 Update
 
 ### Fleet Stats

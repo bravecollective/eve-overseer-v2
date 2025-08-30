@@ -33,7 +33,7 @@
                                         <option value="" selected>Select a Fleet Type</option>
                                         <?php
 
-                                        foreach ($this->model->getFleetTypes() as $eachID => $eachName) {
+                                        foreach ($this->fleetAccessController->getFleetTypes() as $eachID => $eachName) {
                                             ?> 
                                             <option value="<?php echo htmlspecialchars($eachID);?>">
                                                 <?php echo htmlspecialchars($eachName);?>
@@ -114,6 +114,7 @@
         protected $model;
         protected $controller;
         protected $configVariables;
+        protected $fleetAccessController;
         
         public function __construct(
             private \Ridley\Core\Dependencies\DependencyManager $dependencies
@@ -121,6 +122,7 @@
             
             $this->model = $this->dependencies->get("Model");
             $this->controller = $this->dependencies->get("Controller");
+            $this->fleetAccessController = new \Ridley\Objects\AccessControl\Fleet($this->dependencies);
             
         }
         
