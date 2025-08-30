@@ -2,6 +2,27 @@
 
 Changes for each version along with any requirements to update from the previous version will be listed below.
 
+## Patch Version Ensign – 2 – 1 Update
+
+### Player Participation
+
+* Fleet List now adheres to Recency Boundaries.
+* Fixed a bug that caused the Fleet List to only display one line per fleet.
+
+### ESI
+
+* Changed versioning scheme to the new X-Compatibility-Date.
+* Fixed deprecated implicitly nullable argument in Ridley\Objects\ESI\Base.
+
+### User Input Exceptions
+* Fixed deprecated implicitly nullable argument in Ridley\Core\Exceptions\UserInputException.
+
+### UPDATE INSTRUCTIONS (From Version Ensign – 0 – *)
+
+1. Pause operation of the Fleet Checker.
+2. Sync up files with the repository.
+3. Restart operation of the Fleet Checker.
+
 ## Minor Version Ensign – 2 – 0 Update
 
 ### Player Participation

@@ -17,7 +17,7 @@
          * @param   bool         $value_missing         Were input(s) missing rather than invalid? DEFAULT: false
          * @param   bool         $value_not_found       Did otherwise valid inputs result in failed resource location? Sets HTTP Status Code to 404. Mutually exclusive with $hard_coded_inputs and $value_missing. DEFAULT: false
          * @param                $code                  From Exception Class
-         * @param   Throwable    $previous              From Exception Class
+         * @param   ?Throwable   $previous              From Exception Class
          */
         public function __construct(
             private string|array $inputs,
@@ -26,7 +26,7 @@
             private bool $value_missing = false,
             private bool $value_not_found = false,
             $code = 0, 
-            \Throwable $previous = null
+            ?\Throwable $previous = null
         ) {
 
             $this->evaluateImplementation();

@@ -41,7 +41,13 @@ jQuery(document).ready(function () {
     });
 
     $(".player_entry").click(function () {
-        getAccountData($(this).attr("data-row-type"), $(this).attr("data-row-id"), $(this).attr("data-row-name"));
+        getAccountData(
+            $(this).attr("data-row-type"), 
+            $(this).attr("data-row-id"), 
+            $(this).attr("data-row-name"),
+            $("#date_start_condition").val(),
+            $("#date_end_condition").val()
+        );
     });
     
 });
@@ -83,7 +89,7 @@ function checkForPAPMode(corporationID) {
 
 }
 
-function getAccountData(accountType, accountID, accountName) {
+function getAccountData(accountType, accountID, accountName, startTime, endTime) {
 
     $("#modal-account-type").text(accountType);
     $("#modal-account-name").text(accountName);
@@ -96,7 +102,9 @@ function getAccountData(accountType, accountID, accountName) {
     dataObject = {
         "Action": "Get_User_Data",
         "Account_Type": accountType,
-        "Account_ID": accountID
+        "Account_ID": accountID,
+        "Start_Time": startTime,
+        "End_Time": endTime
     };
 
     $.ajax({
@@ -136,7 +144,7 @@ function getAccountData(accountType, accountID, accountName) {
 
             }
 
-            for (eachFleet in result["Fleets"]) {
+            for (eachFleet of result["Fleets"]) {
 
                 if (result["Link Fleets"]) {
 
@@ -146,27 +154,27 @@ function getAccountData(accountType, accountID, accountName) {
                                 $("<td/>")
                                     .append(
                                         $("<a/>")
-                                            .text(result["Fleets"][eachFleet]["Name"])
+                                            .text(eachFleet["Name"])
                                             .addClass("fw-bold")
-                                            .attr("href", "/fleet_stats/" + result["Fleets"][eachFleet]["ID"] + "/")
+                                            .attr("href", "/fleet_stats/" + eachFleet["ID"] + "/")
                                     )
                             )
                             .append(
                                 $("<td/>")
-                                    .text(result["Fleets"][eachFleet]["Type"])
+                                    .text(eachFleet["Type"])
                             )
                             .append(
                                 $("<td/>")
-                                    .text(result["Fleets"][eachFleet]["Date"])
+                                    .text(eachFleet["Date"])
                             )
                             .append(
                                 $("<td/>")
-                                    .text(result["Fleets"][eachFleet]["Character"])
+                                    .text(eachFleet["Character"])
                                     .addClass("fw-bold")
                             )
                             .append(
                                 $("<td/>")
-                                    .text(result["Fleets"][eachFleet]["Duration"])
+                                    .text(eachFleet["Duration"])
                             )
                     );
 
@@ -177,25 +185,25 @@ function getAccountData(accountType, accountID, accountName) {
                         $("<tr/>")
                             .append(
                                 $("<td/>")
-                                    .text(result["Fleets"][eachFleet]["Name"])
+                                    .text(eachFleet["Name"])
                                     .addClass("fw-bold")
                             )
                             .append(
                                 $("<td/>")
-                                    .text(result["Fleets"][eachFleet]["Type"])
+                                    .text(eachFleet["Type"])
                             )
                             .append(
                                 $("<td/>")
-                                    .text(result["Fleets"][eachFleet]["Date"])
+                                    .text(eachFleet["Date"])
                             )
                             .append(
                                 $("<td/>")
-                                    .text(result["Fleets"][eachFleet]["Character"])
+                                    .text(eachFleet["Character"])
                                     .addClass("fw-bold")
                             )
                             .append(
                                 $("<td/>")
-                                    .text(result["Fleets"][eachFleet]["Duration"])
+                                    .text(eachFleet["Duration"])
                             )
                     );
 

@@ -25,7 +25,13 @@
                     $this->checkTracking($_POST["ID"]);
                     
                 }
-                elseif ($_POST["Action"] == "Get_User_Data" and isset($_POST["Account_Type"]) and isset($_POST["Account_ID"])) {
+                elseif (
+                    $_POST["Action"] == "Get_User_Data" 
+                    and isset($_POST["Account_Type"]) 
+                    and isset($_POST["Account_ID"]) 
+                    and isset($_POST["Start_Time"]) 
+                    and isset($_POST["End_Time"])
+                ) {
 
                     $this->getUserData($_POST["Account_Type"], $_POST["Account_ID"]);
 
@@ -52,6 +58,51 @@
                 );
 
             }
+
+        }
+
+        private function generateRecency() {
+
+            $filterDetails = [
+                "Request" => "",
+                "Variables" => []
+            ];
+
+            $filterDetails["Request"] .= "fleetmembers.starttime >= :date_start";
+
+            $definedStartTime = false;
+            if (isset($_POST["Start_Time"]) and $_POST["Start_Time"] != "") {
+                
+                $incomingStartTime = strtotime($_POST["Start_Time"]) * 1000;
+                
+                if ($incomingStartTime != false) {
+                    $definedStartTime = true;
+                }
+                
+            }
+            if (!$definedStartTime) {
+                $incomingStartTime = ((time() - (86400 * 30)) * 1000);
+            }
+
+            $filterDetails["Variables"][":date_start"] = ["Value" => $incomingStartTime, "Type" => \PDO::PARAM_INT];
+
+            if (isset($_POST["End_Time"]) and $_POST["End_Time"] != "") {
+                
+                $incomingEndTime = strtotime($_POST["End_Time"]);
+                
+                if ($incomingEndTime !== false) {
+                    
+                    $incomingEndTime += 86400;
+                    $incomingEndTime *= 1000;
+                
+                    $filterDetails["Request"] .= " AND fleetmembers.endtime <= :date_end";
+                    
+                    $filterDetails["Variables"][":date_end"] = ["Value" => $incomingEndTime, "Type" => \PDO::PARAM_INT];
+                    
+                }
+            }
+            
+            return $filterDetails;
 
         }
 
@@ -143,6 +194,8 @@
                     }
                 }
 
+                $recencyConditions = $this->generateRecency();
+
                 // Pull Character Fleets
                 $fleetsQuery = $this->databaseConnection->prepare("
                     SELECT 
@@ -156,17 +209,20 @@
                     LEFT JOIN fleetmembers ON fleetmembers.characterid = userlinks.characterid
                     LEFT JOIN fleets ON fleets.id = fleetmembers.fleetid
                     LEFT JOIN fleettypes ON fleettypes.id = fleets.type
-                    WHERE accounttype = :accounttype AND accountid = :accountid AND fleets.endtime IS NOT NULL
+                    WHERE accounttype = :accounttype AND accountid = :accountid AND fleets.endtime IS NOT NULL AND " . $recencyConditions["Request"] . "
                     GROUP BY fleetmembers.characterid, fleets.id
                     ORDER BY fleets.starttime DESC
                 ");
+                foreach ($recencyConditions["Variables"] as $eachVariable => $eachValue) {
+                    $fleetsQuery->bindValue($eachVariable, $eachValue["Value"], $eachValue["Type"]);
+                }
                 $fleetsQuery->bindParam(":accounttype", $accountType);
                 $fleetsQuery->bindParam(":accountid", $accountID);
                 $fleetsQuery->execute();
 
                 while ($fleetData = $fleetsQuery->fetch(\PDO::FETCH_ASSOC)) {
 
-                    $userData["Fleets"][$fleetData["id"]] = [
+                    $userData["Fleets"][] = [
                         "ID" => $fleetData["id"],
                         "Name" => $fleetData["name"],
                         "Type" => $fleetData["type"],

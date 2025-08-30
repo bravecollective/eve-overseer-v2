@@ -8,7 +8,7 @@
 
             return $this->makeRequest(
                 endpoint: "/characters/affiliation/",
-                url: ($this->esiURL . "latest/characters/affiliation/?datasource=tranquility"),
+                url: ($this->esiURL . "characters/affiliation/?datasource=tranquility"),
                 method: "POST",
                 payload: $arguments["characters"],
                 cacheTime: 3600,
@@ -21,7 +21,7 @@
 
             return $this->makeRequest(
                 endpoint: "/corporations/{corporation_id}/members/",
-                url: ($this->esiURL . "latest/corporations/" . $arguments["corporation_id"] . "/members/?datasource=tranquility"),
+                url: ($this->esiURL . "corporations/" . $arguments["corporation_id"] . "/members/?datasource=tranquility"),
                 accessToken: $this->accessToken,
                 retries: (isset($arguments["retries"]) ? $arguments["retries"] : 0)
             );
@@ -35,7 +35,7 @@
             $language = (isset($arguments["language"]) ? ("&language=" . $arguments["language"]) : "");;
             $strict = (isset($arguments["strict"]) ? ("&strict=" . $arguments["strict"]) : "");
 
-            $url = $this->esiURL . "latest/characters/" . $arguments["character_id"] . "/search/?datasource=tranquility&categories=" . $categories . "&search=" . $search . $language . $strict;
+            $url = $this->esiURL . "characters/" . $arguments["character_id"] . "/search/?datasource=tranquility&categories=" . $categories . "&search=" . $search . $language . $strict;
 
             return $this->makeRequest(
                 endpoint: "/characters/{character_id}/search/",
@@ -50,7 +50,7 @@
 
             return $this->makeRequest(
                 endpoint: "/universe/names/",
-                url: ($this->esiURL . "latest/universe/names/?datasource=tranquility"),
+                url: ($this->esiURL . "universe/names/?datasource=tranquility"),
                 method: "POST",
                 payload: $arguments["ids"],
                 cacheTime: 3600,
@@ -63,7 +63,7 @@
 
             return $this->makeRequest(
                 endpoint: "/characters/{character_id}/fleet/",
-                url: $this->esiURL . "dev/characters/" . $arguments["character_id"] . "/fleet/?datasource=tranquility",
+                url: $this->esiURL . "characters/" . $arguments["character_id"] . "/fleet/?datasource=tranquility",
                 accessToken: $this->accessToken,
                 retries: (isset($arguments["retries"]) ? $arguments["retries"] : 0)
             );
@@ -74,7 +74,7 @@
 
             return $this->makeRequest(
                 endpoint: "/fleets/{fleet_id}/wings/",
-                url: $this->esiURL . "latest/fleets/" . $arguments["fleet_id"] . "/wings/?datasource=tranquility",
+                url: $this->esiURL . "fleets/" . $arguments["fleet_id"] . "/wings/?datasource=tranquility",
                 accessToken: $this->accessToken,
                 retries: (isset($arguments["retries"]) ? $arguments["retries"] : 0)
             );

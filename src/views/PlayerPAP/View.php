@@ -212,7 +212,7 @@
                                     <table class="table table-dark table-hover align-middle text-wrap small">
                                         <thead class="p-4 small">
                                             <tr class="align-middle">
-                                                <th scope="col" style="width: 30%;">Fleets</th>
+                                                <th scope="col" style="width: 30%;">Recent Fleets</th>
                                                 <th scope="col" style="width: 15%;">Type</th>
                                                 <th scope="col" style="width: 15%;">Date</th>
                                                 <th scope="col" style="width: 25%;">Character</th>
