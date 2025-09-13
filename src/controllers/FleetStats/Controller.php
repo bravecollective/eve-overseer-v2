@@ -65,7 +65,7 @@
                 LEFT JOIN fleettypes ON fleets.type = fleettypes.id
                 LEFT JOIN fleetmembers ON fleets.id = fleetmembers.fleetid
                 INNER JOIN userlinks member_links ON fleetmembers.characterid = member_links.characterid
-                INNER JOIN useraccounts member_accounts ON (member_links.accountid = member_accounts.accountid AND cmdr_links.accounttype = member_accounts.accounttype)
+                INNER JOIN useraccounts member_accounts ON (member_links.accountid = member_accounts.accountid AND member_links.accounttype = member_accounts.accounttype)
                 WHERE fleets.id=:id AND fleets.endtime IS NOT NULL" . $filterDetails["Request"] . "
                 GROUP BY fleets.id
             ");

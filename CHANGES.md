@@ -2,6 +2,18 @@
 
 Changes for each version along with any requirements to update from the previous version will be listed below.
 
+## Patch Version Ensign – 2 – 4 Update
+
+### Fleet Stats
+
+* Fixed a bug where fleet statistics and the fleet list member counts would only include members with the same account type as the Fleet Commander.
+
+### UPDATE INSTRUCTIONS (From Version Ensign – 0 – *)
+
+1. Pause operation of the Fleet Checker.
+2. Sync up files with the repository.
+3. Restart operation of the Fleet Checker.
+
 ## Patch Version Ensign – 2 – 3 Update
 
 ### Alliance Participation
